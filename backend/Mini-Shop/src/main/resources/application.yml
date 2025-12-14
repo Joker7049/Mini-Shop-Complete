@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: Mini-Shop
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/mini_shop_db
+    username: root
+    password: Joker@3030
+
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3.1:latest
+
+
+jwt.secret: jieaanzjfuah274hgbafukarbuhadfjv

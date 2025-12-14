@@ -1,0 +1,74 @@
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+
+> Task :app:compileDebugKotlin FAILED
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:2:5 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:2:19 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:2:20 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:2:36 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:2:38 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:2:38 Function declaration must have a name.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:3:13 Unresolved reference 'adminActionState'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:3:33 Unresolved reference 'AdminActionState'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:4:13 Unresolved reference 'viewModel'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:5:13 Unresolved reference 'onBack'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:9:5 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:9:22 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:10:13 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:10:22 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:10:24 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:10:32 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:11:13 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:11:30 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:11:32 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:11:32 Function declaration must have a name.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:11:34 Unresolved reference 'username'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:11:45 Unresolved reference 'it'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:11:49 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:12:13 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:12:22 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:12:24 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:12:24 Function declaration must have a name.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:13:21 Unresolved reference 'username'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:14:21 Unresolved reference 'viewModel'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:14:42 Unresolved reference 'username'.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:16:14 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:17:13 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:17:30 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:17:32 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:17:48 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:18:13 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:18:20 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:18:22 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:19:5 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/asada/AndroidStudioProjects/MiniShopFronted/app/src/main/java/com/example/mini_shop_fronted/DeleteUserScreen.kt:20:1 Syntax error: Expecting a top level declaration.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 2s
+14 actionable tasks: 1 executed, 13 up-to-date
