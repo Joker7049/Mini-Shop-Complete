@@ -1,0 +1,23 @@
+# --- GLOBAL ---
+.DS_Store
+Thumbs.db
+.env
+
+# --- BACKEND (Spring Boot / Maven) ---
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/.idea/
+backend/*.iml
+backend/*.gguf
+backend/models/
+
+# --- FRONTEND (Android / Gradle) ---
+frontend/.gradle/
+frontend/local.properties
+frontend/.idea/
+frontend/build/
+frontend/app/build/
+frontend/*.iml
+frontend/*.keystore
