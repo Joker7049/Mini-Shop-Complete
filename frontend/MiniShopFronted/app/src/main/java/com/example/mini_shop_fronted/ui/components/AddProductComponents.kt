@@ -1,5 +1,6 @@
 package com.example.mini_shop_fronted.ui.components
 
+import android.R.attr.text
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
@@ -15,6 +16,7 @@ fun DescriptionFieldWithAI(
         onDescriptionChange: (String) -> Unit,
         ollamaState: OllamaProductDescriptionState,
         onGenerateDescription: () -> Unit,
+        descriptionError: String?,
         modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
@@ -39,6 +41,11 @@ fun DescriptionFieldWithAI(
             supportingText = {
                 if (ollamaState is OllamaProductDescriptionState.Error) {
                     Text(ollamaState.message)
+                }
+                if (descriptionError != null){
+                    Text(
+                        text = descriptionError
+                    )
                 }
             }
     )

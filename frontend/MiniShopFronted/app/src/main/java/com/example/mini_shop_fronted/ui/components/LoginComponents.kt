@@ -19,7 +19,9 @@ fun LoginContent(
         onPasswordChange: (String) -> Unit,
         onLogin: () -> Unit,
         onNavigateToSignUp: () -> Unit,
-        loginState: LoginState
+        loginState: LoginState,
+        usernameError: String?,
+        passwordError: String?
 ) {
     Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -39,6 +41,15 @@ fun LoginContent(
                 value = username,
                 onValueChange = onUsernameChange,
                 label = { Text("Username") },
+                supportingText = {
+                    if (usernameError != null) {
+                        Text(
+                                text = usernameError,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
         )
 
@@ -48,6 +59,15 @@ fun LoginContent(
                 value = password,
                 onValueChange = onPasswordChange,
                 label = { Text("Password") },
+                supportingText = {
+                    if (passwordError != null) {
+                        Text(
+                                text = passwordError,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
         )

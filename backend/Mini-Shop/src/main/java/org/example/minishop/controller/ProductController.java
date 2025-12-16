@@ -1,53 +1,51 @@
 package org.example.minishop.controller;
 
 
+import jakarta.validation.Valid;
 import org.example.minishop.dto.ProductDto;
 import org.example.minishop.service.ProductService;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/products")
+@Validated
 public class ProductController {
 
-    private ProductService productService;
+    private final ProductService productService;
 
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
 
     @GetMapping
-    public List<ProductDto> findAll() {
-        return productService.findAllDtos();
+    public ResponseEntity<List<ProductDto>> findAll() {
+        return ResponseEntity.ok(productService.findAllDtos());
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDto> save(@RequestBody ProductDto product) {
-        productService.save(product);
+    public ResponseEntity<ProductDto> save(@Valid @RequestBody ProductDto product) {
+        ProductDto savedProduct = productService.save(product);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(product);
+                .body(savedProduct);
     }
 
     @PostMapping("/batch")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity saveAll(@RequestBody List<ProductDto> products) {
-        try {
-            productService.saveAll(products);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(products);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        }
+    public ResponseEntity<List<ProductDto>> saveAll(@RequestBody @Valid List<ProductDto> products) {
+
+        List<ProductDto> savedProducts = productService.saveAll(products);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(savedProducts);
     }
 }

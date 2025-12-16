@@ -9,56 +9,61 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
-    @Autowired
-    private ProductRepository productRepository;
+
+    private final ProductRepository productRepository;
 
     public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 
     public List<ProductDto> findAllDtos() {
-        List<Product> products = productRepository.findAll();
-        List<ProductDto> productDtos = new ArrayList<>();
-        for (Product product : products) {
-            ProductDto productDto = new ProductDto();
-            productDto.setId(product.getId());
-            productDto.setDescription(product.getDescription());
-            productDto.setPrice(product.getPrice());
-            productDto.setQuantity(product.getQuantity());
-            productDto.setName(product.getName());
-            productDtos.add(productDto);
-        }
-        return productDtos;
+        return productRepository.findAll()
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
     public ProductDto save(ProductDto productDto) {
-        Product product = new Product();
-        product.setName(productDto.getName());
-        product.setDescription(productDto.getDescription());
-        product.setPrice(productDto.getPrice());
-        product.setQuantity(productDto.getQuantity());
-        productRepository.save(product);
-        return productDto;
+        Product product = mapToEntity(productDto);
+        Product savedProduct = productRepository.save(product);
+
+        return mapToDto(savedProduct);
+    }
+
+    public List<ProductDto> saveAll(List<ProductDto> productDtos) {
+        List<Product> products = productDtos.stream()
+                .map(this::mapToEntity)
+                .collect(Collectors.toList());
+
+        List<Product> savedProducts = productRepository.saveAll(products);
+
+        return savedProducts.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
 
-    public void saveAll(List<ProductDto> productDtos) {
-        try {
-            List<Product> products = new ArrayList<>();
-            for (ProductDto productDto : productDtos) {
-                Product product = new Product();
-                product.setName(productDto.getName());
-                product.setDescription(productDto.getDescription());
-                product.setPrice(productDto.getPrice());
-                product.setQuantity(productDto.getQuantity());
-                products.add(product);
-            }
-            productRepository.saveAll(products);
-        }catch (IllegalArgumentException e){
-            throw new IllegalArgumentException("can't save all products, bad content type");
-        }
+
+    private ProductDto mapToDto(Product product) {
+        ProductDto dto = new ProductDto();
+        dto.setId(product.getId());
+        dto.setName(product.getName());
+        dto.setDescription(product.getDescription());
+        dto.setPrice(product.getPrice());
+        dto.setQuantity(product.getQuantity());
+        return dto;
+    }
+
+    private Product mapToEntity(ProductDto dto) {
+        Product product = new Product();
+        product.setName(dto.getName());
+        product.setDescription(dto.getDescription());
+        product.setPrice(dto.getPrice());
+        product.setQuantity(dto.getQuantity());
+        return product;
     }
 }

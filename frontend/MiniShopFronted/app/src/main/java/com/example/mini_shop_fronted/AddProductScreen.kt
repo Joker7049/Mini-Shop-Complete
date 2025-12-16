@@ -1,11 +1,29 @@
 package com.example.mini_shop_fronted
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,8 +72,20 @@ fun AddProductScreen(viewModel: MainViewModel, onBack: () -> Unit) {
 
         OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = {
+                    name = it
+                    viewModel.productNameError = null
+                },
                 label = { Text("Product Name") },
+                supportingText = {
+                    if (viewModel.productNameError != null) {
+                        Text(
+                                text = viewModel.productNameError!!,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
         )
 
@@ -63,18 +93,34 @@ fun AddProductScreen(viewModel: MainViewModel, onBack: () -> Unit) {
 
         DescriptionFieldWithAI(
                 description = description,
-                onDescriptionChange = { description = it },
+                onDescriptionChange = {
+                    description = it
+                    viewModel.productDescriptionError = null
+                },
                 ollamaState = ollamaState,
                 onGenerateDescription = { viewModel.getOllamaProductDescription(name) },
+                descriptionError = viewModel.productDescriptionError,
                 modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
                 value = price,
-                onValueChange = { price = it },
+                onValueChange = {
+                    price = it
+                    viewModel.productPriceError = null
+                },
                 label = { Text("Price") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                supportingText = {
+                    if (viewModel.productPriceError != null) {
+                        Text(
+                                text = viewModel.productPriceError!!,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
         )
 
@@ -82,9 +128,21 @@ fun AddProductScreen(viewModel: MainViewModel, onBack: () -> Unit) {
 
         OutlinedTextField(
                 value = quantity,
-                onValueChange = { quantity = it },
+                onValueChange = {
+                    quantity = it
+                    viewModel.productQuantityError = null
+                },
                 label = { Text("Quantity") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                supportingText = {
+                    if (viewModel.productQuantityError != null) {
+                        Text(
+                                text = viewModel.productQuantityError!!,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
         )
 
@@ -97,9 +155,10 @@ fun AddProductScreen(viewModel: MainViewModel, onBack: () -> Unit) {
                     onClick = {
                         val priceVal = price.toDoubleOrNull()
                         val quantityVal = quantity.toIntOrNull()
-                        if (name.isNotBlank() && priceVal != null && quantityVal != null) {
+                        /*if (name.isNotBlank() && priceVal != null && quantityVal != null) {
                             viewModel.addProduct(name, description, priceVal, quantityVal)
-                        }
+                        }*/
+                        viewModel.addProduct(name, description, priceVal ?: -3.3, quantityVal ?: -3)
                     },
                     modifier = Modifier.fillMaxWidth()
             ) { Text("Add Product") }

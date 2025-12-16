@@ -1,11 +1,14 @@
 package org.example.minishop.controller;
 
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/ollama")
+@Validated
 public class OllamaController {
 
     private ChatClient chatClient;
@@ -28,14 +32,18 @@ public class OllamaController {
 
     @GetMapping("/product-description/{productName}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> getProductDescription(@PathVariable String productName) {
-         String response = chatClient.prompt()
-                .user("write a 2 line description for this (only write the description and nothing more): " + productName)
+    public ResponseEntity<Map<String, String>> getProductDescription(
+            @PathVariable
+            @NotBlank(message = "Product name cannot be empty")
+            @Size(min = 3, max = 100, message = "Product name must be between 3 and 100 characters")
+            String productName) {
+        String response = chatClient.prompt()
+                .user("You are an expert in selling, write a 2 line description for this (only write the description and nothing more): " + productName)
                 .call()
                 .content();
 
-         Map<String, String> map = new HashMap<>();
-         map.put("description", response);
-         return ResponseEntity.ok(map);
+        Map<String, String> map = new HashMap<>();
+        map.put("description", response);
+        return ResponseEntity.ok(map);
     }
 }
