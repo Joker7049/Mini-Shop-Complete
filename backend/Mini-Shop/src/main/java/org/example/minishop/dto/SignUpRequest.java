@@ -4,9 +4,11 @@ package org.example.minishop.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class SignUpRequest {
 
     @NotBlank(message = "Username cannot be empty")

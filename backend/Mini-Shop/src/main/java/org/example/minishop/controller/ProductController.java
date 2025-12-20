@@ -4,6 +4,7 @@ package org.example.minishop.controller;
 import jakarta.validation.Valid;
 import org.example.minishop.dto.ProductDto;
 import org.example.minishop.service.ProductService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,8 +26,8 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductDto>> findAll() {
-        return ResponseEntity.ok(productService.findAllDtos());
+    public ResponseEntity<Page<ProductDto>> findAll(@RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "0") Integer size) {
+        return ResponseEntity.ok(productService.findAllDtos(page, size));
     }
 
     @PostMapping

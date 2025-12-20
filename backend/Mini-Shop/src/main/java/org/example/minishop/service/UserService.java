@@ -2,6 +2,7 @@ package org.example.minishop.service;
 
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.example.minishop.dto.SignUpRequest;
 import org.example.minishop.exception.BadRequestException;
 import org.example.minishop.exception.ResourceNotFoundException;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -37,6 +39,7 @@ public class UserService {
             newUser.setPassword(passwordEncoder.encode(request.getPassword()));
             newUser.setRole(Role.USER);
             userRepository.save(newUser);
+            log.info("Attempting to register user: {}" , newUser);
             return request;
         } catch (DataIntegrityViolationException ex) {
             throw new BadRequestException("Username is already in use");

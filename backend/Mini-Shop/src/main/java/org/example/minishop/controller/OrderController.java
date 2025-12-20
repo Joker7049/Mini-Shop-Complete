@@ -1,12 +1,11 @@
 package org.example.minishop.controller;
 
-
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.example.minishop.dto.OrderRequest;
 import org.example.minishop.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.security.Principal;
 import java.util.Collections;
@@ -15,6 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
+@Slf4j
 public class OrderController {
 
     private final OrderService orderService;
@@ -28,12 +28,11 @@ public class OrderController {
             @Valid @RequestBody OrderRequest orderRequest,
             Principal principal) {
 
-
+        log.info("Received request to create order from user: {}", principal.getName());
         orderService.placeOrder(
                 principal.getName(),
                 orderRequest.getProduct_id(),
-                orderRequest.getCount()
-        );
+                orderRequest.getCount());
 
         return ResponseEntity.ok(Collections.singletonMap("message", "Order placed successfully"));
     }
