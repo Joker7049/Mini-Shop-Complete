@@ -6,6 +6,7 @@ import com.example.mini_shop_fronted.dto.LoginResponse
 import com.example.mini_shop_fronted.dto.OllamaProductDescriptionResponse
 import com.example.mini_shop_fronted.dto.Order
 import com.example.mini_shop_fronted.dto.OrderResponse
+import com.example.mini_shop_fronted.dto.PageResponse
 import com.example.mini_shop_fronted.dto.Product
 import com.example.mini_shop_fronted.dto.SignUpRequest
 import retrofit2.Response
@@ -30,7 +31,7 @@ interface MiniShopApi {
 
     // 3. Get products (needs token)
     @GET("api/products")
-    suspend fun getProducts(@Header("Authorization") token: String): Response<List<Product>>
+    suspend fun getProducts(@Header("Authorization") token: String): Response<PageResponse<Product>>
 
 
     // 4. Delete user (needs token and path variable and the urse's role must be "ADMIN")

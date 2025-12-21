@@ -61,7 +61,8 @@ fun AppNavigation(navController: NavHostController, mainViewModel: MainViewModel
                                         name = product.name,
                                         description = product.description,
                                         price = product.price,
-                                        quantity = product.quantity
+                                        quantity = product.quantity,
+                                        imageUrl = product.imageUrl
                                 )
                         )
                     },
@@ -77,6 +78,7 @@ fun AppNavigation(navController: NavHostController, mainViewModel: MainViewModel
                     description = productDetail.description,
                     price = productDetail.price,
                     quantity = productDetail.quantity,
+                    imageUrl = productDetail.imageUrl,
                     viewModel = mainViewModel,
                     onBack = { navController.popBackStack() }
             )

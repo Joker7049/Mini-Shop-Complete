@@ -13,45 +13,58 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.mini_shop_fronted.dto.Product
 
 @Composable
 fun ProductItem(product: Product, onClick: () -> Unit) {
-    Card(
-            modifier = Modifier.fillMaxWidth().height(200.dp).clickable(onClick = onClick),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors =
-                    CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-    ) {
-        Column(
-                modifier = Modifier.fillMaxSize().padding(12.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally
+        Card(
+                modifier = Modifier.fillMaxWidth().height(200.dp).clickable(onClick = onClick),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors =
+                        CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
         ) {
-            Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Product Icon",
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.primary
-            )
+                Column(
+                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                        if (product.imageUrl != null) {
+                                AsyncImage(
+                                        model = product.imageUrl,
+                                        contentDescription = product.name,
+                                        modifier = Modifier.size(64.dp)
+                                )
+                        } else {
+                                Icon(
+                                        imageVector = Icons.Default.ShoppingCart,
+                                        contentDescription = "Product Icon",
+                                        modifier = Modifier.size(64.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                )
+                        }
 
-            Text(
-                    text = product.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-            )
+                        Text(
+                                text = product.name,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                        )
 
-            Text(
-                    text = "$${product.price}",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.secondary
-            )
+                        Text(
+                                text = "$${product.price}",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.secondary
+                        )
 
-            Text(text = "Qty: ${product.quantity}", fontSize = 12.sp, color = Color.Gray)
+                        Text(
+                                text = "Qty: ${product.quantity}",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                        )
+                }
         }
-    }
 }

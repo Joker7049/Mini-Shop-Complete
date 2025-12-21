@@ -31,6 +31,7 @@ fun ProductDetailScreen(
         description: String,
         price: Double,
         quantity: Int,
+        imageUrl: String?,
         viewModel: MainViewModel,
         onBack: () -> Unit
 ) {
@@ -92,7 +93,7 @@ fun ProductDetailScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                         // Product Icon with gradient background
-                        ProductImage()
+                        ProductImage(imageUrl)
 
                         Spacer(modifier = Modifier.height(24.dp))
 

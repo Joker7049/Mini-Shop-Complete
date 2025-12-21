@@ -33,7 +33,7 @@ class MainViewModel : ViewModel() {
     val adminActionState: StateFlow<AdminActionState> = _adminActionState.asStateFlow()
 
     private val _ollamaProductDescription =
-            MutableStateFlow<OllamaProductDescriptionState>(OllamaProductDescriptionState.Idle)
+        MutableStateFlow<OllamaProductDescriptionState>(OllamaProductDescriptionState.Idle)
     val ollamaProductDescriptionResponse = _ollamaProductDescription.asStateFlow()
 
     var productNameError by mutableStateOf<String?>(null)
@@ -55,9 +55,9 @@ class MainViewModel : ViewModel() {
                     val loginResponse = response.body()
                     if (loginResponse != null) {
                         UserContext.setUserData(
-                                token = loginResponse.token,
-                                username = loginResponse.username,
-                                role = loginResponse.role
+                            token = loginResponse.token,
+                            username = loginResponse.username,
+                            role = loginResponse.role
                         )
                         println("Login Success: ${UserContext.token}")
                         _loginState.value = LoginState.Success
@@ -114,11 +114,11 @@ class MainViewModel : ViewModel() {
                     val response = api.getProducts(token)
                     println("token: ${UserContext.token}")
                     if (response.isSuccessful) {
-                        val products = response.body() ?: emptyList()
+                        val products = response.body()?.content ?: emptyList()
                         _productState.value = ProductState.Success(products)
                     } else {
                         _productState.value =
-                                ProductState.Error("Failed to load products: ${response.code()}")
+                            ProductState.Error("Failed to load products: ${response.code()}")
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -147,7 +147,7 @@ class MainViewModel : ViewModel() {
                     _orderState.value = OrderState.Error("Error: ${e.message}")
                 }
             }
-                    ?: run { _orderState.value = OrderState.Error("Not authenticated") }
+                ?: run { _orderState.value = OrderState.Error("Not authenticated") }
         }
     }
 
@@ -161,13 +161,14 @@ class MainViewModel : ViewModel() {
                 _adminActionState.value = AdminActionState.Loading
                 try {
                     val product =
-                            Product(
-                                    id = 0,
-                                    name = name,
-                                    description = description,
-                                    price = price,
-                                    quantity = quantity
-                            )
+                        Product(
+                            id = 0,
+                            name = name,
+                            description = description,
+                            price = price,
+                            quantity = quantity,
+                            imageUrl = null
+                        )
                     val response = api.addProduct(token, product)
                     if (response.isSuccessful) {
                         _adminActionState.value = AdminActionState.Success
@@ -175,7 +176,7 @@ class MainViewModel : ViewModel() {
                     } else {
                         val errorObj = response.parseError()
                         _adminActionState.value =
-                                AdminActionState.Error("Failed to add product: ${response.code()}")
+                            AdminActionState.Error("Failed to add product: ${response.code()}")
 
                         if (errorObj?.validationErrors != null) {
                             productNameError = errorObj.validationErrors["name"]
@@ -199,21 +200,21 @@ class MainViewModel : ViewModel() {
                     val response = api.getAiDescription(token, productName)
                     if (response.isSuccessful) {
                         _ollamaProductDescription.value =
-                                OllamaProductDescriptionState.Success(
-                                        response.body()
-                                                ?: OllamaProductDescriptionResponse(
-                                                        "No description available"
-                                                )
-                                )
+                            OllamaProductDescriptionState.Success(
+                                response.body()
+                                    ?: OllamaProductDescriptionResponse(
+                                        "No description available"
+                                    )
+                            )
                     } else {
                         _ollamaProductDescription.value =
-                                OllamaProductDescriptionState.Error(
-                                        "Failed to get product description: ${response.code()}"
-                                )
+                            OllamaProductDescriptionState.Error(
+                                "Failed to get product description: ${response.code()}"
+                            )
                     }
                 } catch (e: Exception) {
                     _ollamaProductDescription.value =
-                            OllamaProductDescriptionState.Error("Error: ${e.message}")
+                        OllamaProductDescriptionState.Error("Error: ${e.message}")
                 }
             }
         }
@@ -229,7 +230,7 @@ class MainViewModel : ViewModel() {
                         _adminActionState.value = AdminActionState.Success
                     } else {
                         _adminActionState.value =
-                                AdminActionState.Error("Failed to delete user: ${response.code()}")
+                            AdminActionState.Error("Failed to delete user: ${response.code()}")
                     }
                 } catch (e: Exception) {
                     _adminActionState.value = AdminActionState.Error("Error: ${e.message}")

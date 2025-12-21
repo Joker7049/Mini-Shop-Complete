@@ -29,15 +29,7 @@ public class ProductService {
 
         log.debug("Fetching all products");
         return productRepository.findAll(pageable)
-                .map(product -> {
-                    ProductDto productDto = new ProductDto();
-                    productDto.setId(product.getId());
-                    productDto.setName(product.getName());
-                    productDto.setPrice(product.getPrice());
-                    productDto.setQuantity(product.getQuantity());
-                    productDto.setDescription(product.getDescription());
-                    return productDto;
-                });
+                .map(this::mapToDto);
     }
 
     public ProductDto save(ProductDto productDto) {
@@ -70,6 +62,7 @@ public class ProductService {
         dto.setDescription(product.getDescription());
         dto.setPrice(product.getPrice());
         dto.setQuantity(product.getQuantity());
+        dto.setImageUrl(product.getImageUrl());
         return dto;
     }
 
@@ -79,6 +72,7 @@ public class ProductService {
         product.setDescription(dto.getDescription());
         product.setPrice(dto.getPrice());
         product.setQuantity(dto.getQuantity());
+        product.setImageUrl(dto.getImageUrl());
         return product;
     }
 }
