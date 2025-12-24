@@ -52,6 +52,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -77,12 +78,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
+import com.example.mini_shop_frontend.ui.ProductDetailScreen
 import com.example.mini_shop_frontend.viewmodel.MainViewModel
 
 // --- Constants & Color Palette from Tailwind Config ---
@@ -99,6 +107,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+fun getIconForCategory(categoryName: String): ImageVector {
+    return when (categoryName.uppercase()) {
+        "FASHION" -> Icons.Outlined.Checkroom
+        "ELECTRONICS" -> Icons.Outlined.Devices
+        "HOME & KITCHEN" -> Icons.Outlined.Chair
+        "SPORTS" -> Icons.Outlined.FitnessCenter
+        "BEAUTY" -> Icons.Outlined.Diamond
+        else -> Icons.Default.GridView // Fallback icon
+    }
+}
+
 // --- Data Models ---
 data class HeroBanner(
     val title: String,
@@ -109,7 +128,9 @@ data class HeroBanner(
 )
 
 data class Product(
+    val id: Long,
     val name: String,
+    val description: String? = null,
     val imageUrl: String,
     val rating: Double?,
     val price: Double,
@@ -140,31 +161,29 @@ val heroBanners =
         )
     )
 
-val categories =
-    listOf(
-        CategoryItem("Fashion", Icons.Outlined.Checkroom),
-        CategoryItem("Tech", Icons.Outlined.Devices),
-        CategoryItem("Home", Icons.Outlined.Chair),
-        CategoryItem("Sports", Icons.Outlined.FitnessCenter),
-        CategoryItem("Beauty", Icons.Outlined.Diamond)
-    )
 
 val newArrivals =
     listOf(
         Product(
+            1,
             "Nike Air Max Red",
+            "Experience ultimate comfort with the classic Nike Air Max Red.",
             "https://lh3.googleusercontent.com/aida-public/AB6AXuAJgvAvwaR90x5rBMmX0JfpA6OWKFWaKSBejXsD5fxRiWt3YgnWY__7P2uR-7ILcYWNRMW6YVujFjJbmNCB5LzFs-_H1Zz8q8OSAdfn0TRIe1m1_jNPHCDZDZMp6N1JreFKa0CuNgUnAN2kaAPzLUyxxcNme7Kic6JeLsV_Fj7RcMG21O1M8bd-enZqkpPWh6RaYQ1NEu11ss24iPcFZ5RAqFZAsuuch_QUuPoZBfYlKcRMkHNPaPsA8NdXFHjVnTAj_GQf1GcYvEI",
             4.8,
             129.00
         ),
         Product(
+            2,
             "Sony Headphones",
+            "High-quality noise-canceling headphones from Sony.",
             "https://lh3.googleusercontent.com/aida-public/AB6AXuBNgoKNaT2CoHAmiwAsJ32iFjtSqEwfUwtllj-vvD3XK_zoJF0zVJAK6NeGv19EiH8wj5PNpiI9IJjL9DiNmfgsoN7ug-ok3TYPlTpEuP0rRSHYd3wuaK55vBNi8veEXaTgTRLnybhc8vxB7O40aE4_cBFvgYoZnukD57KieILgIjJ66B_iBYDiGtiRqi6q__Vb0jnVy7WMuBOo0It9-PKqBUqU413_gDC7HK4u82koYD63uqD-UsyGD1uioVLKtaURUg5Ilbb7XrE",
             4.9,
             299.00
         ),
         Product(
+            3,
             "Smart Watch Pro",
+            "Keep track of your health and notifications with Smart Watch Pro.",
             "https://lh3.googleusercontent.com/aida-public/AB6AXuChXXhht-_YrcEWg8I9nUf5JnpzLCzkrLymVYZa56iort3eNI_4yBvYH9EghqBL0Bd5sfT9zuOMz1XYOBXq1XX7sQduz5WGm5kooHgxhHDUj4ZLjuTvNwTVOso_v6sxNZsJPhK0h-HlMHbo5zLJTBccCWSEvPt3JhU6Hc4_Zn0d68bxCy3DI3N8W-fWNQ6gpyXI_XQR96uX_KolpYwP7MbwuNlaxsjpKLD4tANd8IBVp33HeOkF48c2MN2TqyavSugniqpwFtN1UVM",
             4.5,
             199.00
@@ -174,29 +193,37 @@ val newArrivals =
 val trendingProducts =
     listOf(
         Product(
+            4,
             "Classic Leather Bag",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuCvLfDem5hN9RGwCO62FFlFswaUh5TuzLGQK8cCX9pM_Wcl4oRENwAJ8WKwwARQjHOxQVGZPdAMjzZ-HQqufhpifzVOMoP8qmxlYAFXzyVtSHRil7kDqeIQlC--W7BORq4zK071UQxgEUNo0MBIRoAcXFtPKqlXmsmByoSk-CGWR4s8S4WD3rMUvG8Rpb2JPQ_ASCHlbnAjG2m4CCGcxars7FKkUCDkHTPEdUD6PZR9Kos7Ebc0p6WxL0W_pBxAO38pQ48TVp2Tn-E",
+            "Elevate your style with this classic leather bag.",
+            "https://lh3.googleusercontent.com/aida-public/AB6AXuCvLfDem5hN9RGwCO62FFlFswaUh5TuzLGQK8cCX9pM_Wcl4oRENwAJ8WKwwARQjHOxQVGZPdAMjzZ-HQqufhpifzVOMoP8qmxlYAFXzyVtSHRil7kDqeIQlC--W7BORq4zK071UQxgEUNo0MBIRoAcXFtPKqlXmsmByoSk-CGWR4s8S4WD3rMUvG8Rpb2JPQ_ASCHlbnAjG2m4CCGcxars7FKkUCDkHTPErUD6PZR9Kos7Ebc0p6WxL0W_pBxAO38pQ48TVp2Tn-E",
             null,
             89.00,
             category = "Accessories",
             isBestSeller = true
         ),
         Product(
+            5,
             "Basic Black Tee",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuApn5y5g4qZ81lBLLxa3zerSiIfIaIk6-qdx0Zh87gQSG7W3hEmwh_V-43VUfg17yyErvN_jK5cqEgJsvUjh0lOVLuMegOOhJyYWTJc13IhlSmHwTVWyYuvPTc9HDK9epJTYIxdjgGA94gEL3SjaBaT5ghQsN-v3pEvYoKbYtXSxlcdqDD6yCpkt8aYguX797SK-Pe-WRqZyOzAvy2wfGgkCimen508vMBDIWUPiTtGgY5CBSW7o4QgWlINr-e8Vc9kLb_6f_wxrU8",
+            "A must-have basic black tee for every wardrobe.",
+            "https://lh3.googleusercontent.com/aida-public/AB6AXuApn5y5g4qZ81lBLLxa3zerSiIfIaIk6-qdx0Zh87gQSG7W3hEmwh_V-43VUfg17yyErvN_jK5cqEgJsvUjh0lOVLuMegOOhJyYWTJc13IhlSmHwTVWyYuvPTC9HDK9epJTYIxdjgGA94gEL3SjaBaT5ghQsN-v3pEvYoKbYtXSxlcdqDD6yCpkt8aYguX797SK-Pe-WRqZyOzAvy2wfGgkCimen508vMBDIWUPiTtGgY5CBSW7o4QgWlINr-e8Vc9kLb_6f_wxrU8",
             null,
             24.00,
             category = "Clothing"
         ),
         Product(
+            6,
             "Urban Sneakers",
+            "Stay trendy with these comfortable urban sneakers.",
             "https://lh3.googleusercontent.com/aida-public/AB6AXuA7bNJ-a80lVaCYYHxPzjMbS53Pbl4ijvJ35ZXVMAUX5Y-Qj84gQJOieu8xTEFv0rqLTHIyknTEsqyc_8AyplsBL-jQIoI1T8Yp1IsBm52AzeFYNps6GAcH2-vraRJF3NlUL3Pr3MRJunkEap1uGMnLkL0srxO8SKJHtE32gompEI-hvWjEgI7WhPR7WKn45dRhdAZG_X_cdsIAQDEY4Hjsyg_9GGQ6wQtnf6TmDCh_Fpv9uiy-GAuc0soziUUwMWEO9tnneRipbaY",
             null,
             75.00,
             category = "Footwear"
         ),
         Product(
+            7,
             "Essence Perfume",
+            "A captivating essence perfume for all occasions.",
             "https://lh3.googleusercontent.com/aida-public/AB6AXuAFKXgTJH_xoi2bGqzHffWlz0is7wUpVxNLGIKwcJHq3hzfv5qZYuLKIyr-Tmzk9o_j46i_yBmeYUQIMc0sDCi8tzyAandFxSNgCmsP5-4oBNBeIMshH-OgjvilsC7TP6idpHVRXXZJ1cDMre7UTea_6vSfht83IyeolPzs77546zZ-wa3waav1Qj9PcHq8Y1ew4t2kBQnhROIS-Q9205pL27PJllx4Qdezu7blCmZMYphkuhTiow2Ud-YzWXDXc3CuXWQt8TbTiN8",
             null,
             95.00,
@@ -207,12 +234,71 @@ val trendingProducts =
     )
 
 // --- Composable: Main App Structure ---
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ShopperApp(viewModel: MainViewModel = viewModel()) {
+    val navController = rememberNavController()
     val products by viewModel.products.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
+    val categories by viewModel.categories.collectAsState()
 
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") {
+            HomeScreen(
+                products = products,
+                categories = categories,
+                isLoading = isLoading,
+                error = error,
+                onProductClick = { productId ->
+                    navController.navigate("product_detail/$productId")
+                },
+                onSeeAllClick = { navController.navigate("product_list") },
+                onCategoryClick = { categoryName ->
+                    viewModel.selectCategory(categoryName)
+                    navController.navigate("product_list")
+                }
+            )
+        }
+        composable(
+            route = "product_detail/{productId}",
+            arguments = listOf(navArgument("productId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getLong("productId")
+            val product = products.find { it.id == productId }
+            if (product != null) {
+                ProductDetailScreen(
+                    product = product,
+                    onBackClick = { navController.popBackStack() },
+                    onAddToCartClick = { /* Handle cart */ }
+                )
+            }
+        }
+        composable("product_list") {
+            com.example.mini_shop_frontend.ui.ProductListScreen(
+                title = selectedCategory ?: "All Products",
+                products = products,
+                onBackClick = { navController.popBackStack() },
+                onProductClick = { productId ->
+                    navController.navigate("product_detail/$productId")
+                }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun HomeScreen(
+    products: List<Product>,
+    categories: List<String>,
+    isLoading: Boolean,
+    error: String?,
+    onProductClick: (Long) -> Unit,
+    onSeeAllClick: () -> Unit,
+    onCategoryClick: (String) -> Unit
+) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -229,16 +315,16 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
             // Sticky Header
             stickyHeader { TopAppBar() }
 
-            // Search Bar (Not sticky in this design implementation, mimics the HTML flow)
+            // Search Bar
             item { SearchBar(modifier = Modifier.padding(horizontal = 16.dp)) }
 
             // Hero Carousel
             item { HeroCarousel() }
 
             // Categories
-            item { CategorySection() }
+            item { CategorySection(categories = categories, onCategoryClick) }
 
-            // New Arrivals (Real Data)
+            // New Arrivals
             item {
                 if (isLoading) {
                     Box(
@@ -248,20 +334,27 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
                         contentAlignment = Alignment.Center
                     ) { CircularProgressIndicator() }
                 } else if (error != null) {
-                    Text("Error: $error", color = Color.Red, modifier = Modifier.padding(16.dp))
+                    Text(
+                        "Error: $error",
+                        color = Color.Red,
+                        modifier = Modifier.padding(16.dp)
+                    )
                 } else {
-                    NewArrivalsSection(products)
+                    NewArrivalsSection(
+                        products = products,
+                        onProductClick = onProductClick,
+                        onSeeAllClick = onSeeAllClick
+                    )
                 }
             }
 
             // Trending Grid
-            // We implement the 2-column grid by chunking the list and rendering rows manually
-            // to avoid nested scrolling issues with LazyVerticalGrid inside LazyColumn
             item {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -276,22 +369,23 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
 
             items(trendingProducts.chunked(2)) { rowItems ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     rowItems.forEach { product ->
-                        Box(modifier = Modifier.weight(1f)) { TrendingProductCard(product) }
+                        Box(modifier = Modifier.weight(1f)) {
+                            TrendingProductCard(product, onProductClick)
+                        }
                     }
-                    // If row has only 1 item, add empty weight to balance
                     if (rowItems.size == 1) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
 
-            // Spacer for bottom nav visibility
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
@@ -299,22 +393,25 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
 
 // --- Components ---
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBar() {
     Surface(color = Color.White, shadowElevation = 2.dp, modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // Menu Button
             IconButton(
                 onClick = {},
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(Color.Transparent, CircleShape)
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .background(Color.Transparent, CircleShape)
             ) { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextDark) }
 
             // Title
@@ -344,8 +441,15 @@ fun TopAppBar() {
                                 .align(Alignment.TopEnd)
                                 .padding(top = 4.dp, end = 4.dp)
                                 .size(10.dp)
-                                .background(PrimaryBlue, CircleShape)
-                                .border(2.dp, Color.White, CircleShape)
+                                .background(
+                                    PrimaryBlue,
+                                    CircleShape
+                                )
+                                .border(
+                                    2.dp,
+                                    Color.White,
+                                    CircleShape
+                                )
                     )
                 }
                 IconButton(onClick = {}, modifier = Modifier.size(40.dp)) {
@@ -373,7 +477,11 @@ fun SearchBar(modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 12.dp)
         ) {
-            Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = Color.Gray)
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = Color.Gray
+            )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Find your favorite items...",
@@ -428,7 +536,9 @@ fun HeroCard(banner: HeroBanner) {
                                 colors =
                                     listOf(
                                         Color.Transparent,
-                                        Color.Black.copy(alpha = 0.7f)
+                                        Color.Black.copy(
+                                            alpha = 0.7f
+                                        )
                                     ),
                                 startY = 100f
                             )
@@ -452,7 +562,11 @@ fun HeroCard(banner: HeroBanner) {
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 8.dp,
+                                vertical = 4.dp
+                            )
                     )
                 }
 
@@ -477,10 +591,12 @@ fun HeroCard(banner: HeroBanner) {
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor =
-                                if (banner.buttonText == "Shop Now") Color.White
+                                if (banner.buttonText == "Shop Now")
+                                    Color.White
                                 else PrimaryBlue,
                             contentColor =
-                                if (banner.buttonText == "Shop Now") TextDark
+                                if (banner.buttonText == "Shop Now")
+                                    TextDark
                                 else Color.White
                         ),
                     shape = RoundedCornerShape(8.dp),
@@ -492,11 +608,16 @@ fun HeroCard(banner: HeroBanner) {
 }
 
 @Composable
-fun CategorySection() {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .background(Color.White)
-        .padding(vertical = 16.dp)) {
+fun CategorySection(
+    categories: List<String>,
+    onCategoryClick: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(vertical = 16.dp)
+    ) {
         Text(
             text = "Categories",
             style = MaterialTheme.typography.titleLarge,
@@ -519,11 +640,11 @@ fun CategorySection() {
                         color = Color(0xFFF0F2F4),
                         modifier = Modifier
                             .size(64.dp)
-                            .clickable {}
+                            .clickable { onCategoryClick(category) }
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = category.icon,
+                                imageVector = getIconForCategory(category),
                                 contentDescription = null,
                                 tint = TextDark
                             )
@@ -531,10 +652,11 @@ fun CategorySection() {
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = category.name,
+                        text = category,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = TextDark
+                        color = TextDark,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -543,15 +665,20 @@ fun CategorySection() {
 }
 
 @Composable
-fun NewArrivalsSection(products: List<Product>) {
+fun NewArrivalsSection(
+    products: List<Product>,
+    onProductClick: (Long) -> Unit,
+    onSeeAllClick: () -> Unit = {}
+) {
     Column(modifier = Modifier
         .fillMaxWidth()
         .background(Color.White)
         .padding(bottom = 16.dp)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -566,20 +693,22 @@ fun NewArrivalsSection(products: List<Product>) {
                 color = PrimaryBlue,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable {}
+                modifier = Modifier.clickable { onSeeAllClick() }
             )
         }
 
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) { items(products) { product -> NewArrivalCard(product) } }
+        ) { items(products) { product -> NewArrivalCard(product, onProductClick) } }
     }
 }
 
 @Composable
-fun NewArrivalCard(product: Product) {
-    Column(modifier = Modifier.width(144.dp)) {
+fun NewArrivalCard(product: Product, onProductClick: (Long) -> Unit) {
+    Column(modifier = Modifier
+        .width(144.dp)
+        .clickable { onProductClick(product.id) }) {
         Box(
             modifier =
                 Modifier
@@ -646,8 +775,10 @@ fun NewArrivalCard(product: Product) {
 }
 
 @Composable
-fun TrendingProductCard(product: Product) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+fun TrendingProductCard(product: Product, onProductClick: (Long) -> Unit) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { onProductClick(product.id) }) {
         Box(
             modifier =
                 Modifier
@@ -666,15 +797,20 @@ fun TrendingProductCard(product: Product) {
                 Surface(
                     color = Color.White,
                     shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(8.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(8.dp)
                 ) {
                     Text(
                         text = "BEST SELLER",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 4.dp,
+                                vertical = 2.dp
+                            )
                     )
                 }
             }
@@ -683,16 +819,21 @@ fun TrendingProductCard(product: Product) {
                 Surface(
                     color = Color(0xFFEF4444), // Red 500
                     shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(8.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(8.dp)
                 ) {
                     Text(
                         text = product.discountTag,
                         color = Color.White,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 4.dp,
+                                vertical = 2.dp
+                            )
                     )
                 }
             }
@@ -766,7 +907,11 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             listOf(
                 Triple("Home", Icons.Default.Home, Icons.Outlined.Home),
                 Triple("Catalog", Icons.Default.GridView, Icons.Outlined.GridView),
-                Triple("Wishlist", Icons.Default.Favorite, Icons.Outlined.FavoriteBorder),
+                Triple(
+                    "Wishlist",
+                    Icons.Default.Favorite,
+                    Icons.Outlined.FavoriteBorder
+                ),
                 Triple("Account", Icons.Default.Person, Icons.Outlined.Person)
             )
 
@@ -777,12 +922,17 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
                 onClick = { onTabSelected(index) },
                 icon = {
                     Icon(
-                        imageVector = if (isSelected) item.second else item.third,
+                        imageVector =
+                            if (isSelected) item.second else item.third,
                         contentDescription = item.first
                     )
                 },
                 label = {
-                    Text(text = item.first, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+                    Text(
+                        text = item.first,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 },
                 colors =
                     NavigationBarItemDefaults.colors(
