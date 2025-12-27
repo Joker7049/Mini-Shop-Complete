@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -60,16 +59,16 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,6 +86,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
@@ -160,7 +160,6 @@ val heroBanners =
             "Explore"
         )
     )
-
 
 val newArrivals =
     listOf(
@@ -243,47 +242,137 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
     val error by viewModel.error.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
 
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
-            HomeScreen(
-                products = products,
-                categories = categories,
-                isLoading = isLoading,
-                error = error,
-                onProductClick = { productId ->
-                    navController.navigate("product_detail/$productId")
-                },
-                onSeeAllClick = { navController.navigate("product_list") },
-                onCategoryClick = { categoryName ->
-                    viewModel.selectCategory(categoryName)
-                    navController.navigate("product_list")
-                }
-            )
-        }
-        composable(
-            route = "product_detail/{productId}",
-            arguments = listOf(navArgument("productId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val productId = backStackEntry.arguments?.getLong("productId")
-            val product = products.find { it.id == productId }
-            if (product != null) {
-                ProductDetailScreen(
-                    product = product,
-                    onBackClick = { navController.popBackStack() },
-                    onAddToCartClick = { /* Handle cart */ }
-                )
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            navController.navigate("home") {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
             }
         }
-        composable("product_list") {
-            com.example.mini_shop_frontend.ui.ProductListScreen(
-                title = selectedCategory ?: "All Products",
-                products = products,
-                onBackClick = { navController.popBackStack() },
-                onProductClick = { productId ->
-                    navController.navigate("product_detail/$productId")
+    }
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val selectedTab =
+        when {
+            currentRoute == "home" -> 0
+            currentRoute == "product_list" -> 1
+            currentRoute?.contains("cart") == true -> 2
+            currentRoute == "profile" -> 3
+            else -> 0
+        }
+
+    Scaffold(
+        bottomBar = {
+            if (currentRoute != "login" && currentRoute != "signup") {
+                BottomNavigationBar(selectedTab) { index ->
+                    val destination =
+                        when (index) {
+                            0 -> "home"
+                            1 -> "product_list"
+                            2 -> "cart"
+                            3 -> "profile"
+                            else -> "home"
+                        }
+                    if (currentRoute != destination) {
+                        navController.navigate(destination) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 }
-            )
+            }
+        },
+        containerColor = BackgroundLight
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = "login",
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            composable("home") {
+                HomeScreen(
+                    products = products,
+                    categories = categories,
+                    isLoading = isLoading,
+                    error = error,
+                    onProductClick = { productId ->
+                        navController.navigate("product_detail/$productId")
+                    },
+                    onSeeAllClick = { navController.navigate("product_list") },
+                    onCategoryClick = { categoryName ->
+                        viewModel.selectCategory(categoryName)
+                        navController.navigate("product_list")
+                    }
+                )
+            }
+            composable(
+                route = "product_detail/{productId}",
+                arguments =
+                    listOf(navArgument("productId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val productId = backStackEntry.arguments?.getLong("productId")
+                val product = products.find { it.id == productId }
+                if (product != null) {
+                    ProductDetailScreen(
+                        product = product,
+                        onBackClick = { navController.popBackStack() },
+                        onAddToCartClick = { /* Handle cart */ }
+                    )
+                }
+            }
+            composable("product_list") {
+                com.example.mini_shop_frontend.ui.ProductListScreen(
+                    title = selectedCategory ?: "All Products",
+                    products = products,
+                    onBackClick = { navController.popBackStack() },
+                    onProductClick = { productId ->
+                        navController.navigate("product_detail/$productId")
+                    }
+                )
+            }
+            composable("profile") {
+                com.example.mini_shop_frontend.ui.ProfileScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onLogoutClick = {
+                        viewModel.logout()
+                        navController.navigate("login"){
+                            popUpTo(0){inclusive = true}
+                        }
+                    }
+                )
+            }
+            // Placeholder for Cart
+            composable("cart") {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) { Text("Cart Screen Placeholder") }
+            }
+            composable("login") {
+                com.example.mini_shop_frontend.ui.LoginScreen(
+                    onLoginClick = { username, password ->
+                        viewModel.login(username, password)
+                    },
+                    onSignUpClick = { navController.navigate("signup") },
+                    onForgotPasswordClick = { /* Handle forgot password */ }
+                )
+            }
+            composable("signup") {
+                com.example.mini_shop_frontend.ui.SignUpScreen(
+                    onSignUpClick = { username, password, email ->
+                        viewModel.signUp(username, password, email)
+                    },
+                    onLoginClick = { navController.navigate("login") },
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
@@ -299,95 +388,84 @@ fun HomeScreen(
     onSeeAllClick: () -> Unit,
     onCategoryClick: (String) -> Unit
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+    // Main Content List
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Sticky Header
+        stickyHeader { TopAppBar() }
 
-    Scaffold(
-        bottomBar = { BottomNavigationBar(selectedTab) { selectedTab = it } },
-        containerColor = BackgroundLight
-    ) { paddingValues ->
-        // Main Content List
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Sticky Header
-            stickyHeader { TopAppBar() }
+        // Search Bar
+        item { SearchBar(modifier = Modifier.padding(horizontal = 16.dp)) }
 
-            // Search Bar
-            item { SearchBar(modifier = Modifier.padding(horizontal = 16.dp)) }
+        // Hero Carousel
+        item { HeroCarousel() }
 
-            // Hero Carousel
-            item { HeroCarousel() }
+        // Categories
+        item { CategorySection(categories = categories, onCategoryClick) }
 
-            // Categories
-            item { CategorySection(categories = categories, onCategoryClick) }
-
-            // New Arrivals
-            item {
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) { CircularProgressIndicator() }
-                } else if (error != null) {
-                    Text(
-                        "Error: $error",
-                        color = Color.Red,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                } else {
-                    NewArrivalsSection(
-                        products = products,
-                        onProductClick = onProductClick,
-                        onSeeAllClick = onSeeAllClick
-                    )
-                }
+        // New Arrivals
+        item {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) { CircularProgressIndicator() }
+            } else if (error != null) {
+                Text(
+                    "Error: $error",
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else {
+                NewArrivalsSection(
+                    products = products,
+                    onProductClick = onProductClick,
+                    onSeeAllClick = onSeeAllClick
+                )
             }
-
-            // Trending Grid
-            item {
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Trending Now",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDark
-                    )
-                }
-            }
-
-            items(trendingProducts.chunked(2)) { rowItems ->
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    rowItems.forEach { product ->
-                        Box(modifier = Modifier.weight(1f)) {
-                            TrendingProductCard(product, onProductClick)
-                        }
-                    }
-                    if (rowItems.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-
-            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
+
+        // Trending Grid
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Trending Now",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+            }
+        }
+
+        items(trendingProducts.chunked(2)) { rowItems ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                rowItems.forEach { product ->
+                    Box(modifier = Modifier.weight(1f)) {
+                        TrendingProductCard(product, onProductClick)
+                    }
+                }
+                if (rowItems.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
@@ -495,8 +573,6 @@ fun SearchBar(modifier: Modifier = Modifier) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HeroCarousel() {
-    val pagerState = rememberPagerState(pageCount = { heroBanners.size })
-
     // Using simple Row with horizontal scroll for specific "snap" feel requested by design
     // However, HorizontalPager is more idiomatic for carousels.
     // Let's use LazyRow with snap behavior to match the HTML `snap-x` exactly.
@@ -546,9 +622,11 @@ fun HeroCard(banner: HeroBanner) {
             )
 
             // Content
-            Column(modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(24.dp)) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(24.dp)
+            ) {
                 // Tag
                 Surface(
                     color =
@@ -608,10 +686,7 @@ fun HeroCard(banner: HeroBanner) {
 }
 
 @Composable
-fun CategorySection(
-    categories: List<String>,
-    onCategoryClick: (String) -> Unit
-) {
+fun CategorySection(categories: List<String>, onCategoryClick: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -638,13 +713,19 @@ fun CategorySection(
                     Surface(
                         shape = CircleShape,
                         color = Color(0xFFF0F2F4),
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clickable { onCategoryClick(category) }
+                        modifier =
+                            Modifier
+                                .size(64.dp)
+                                .clickable {
+                                    onCategoryClick(category)
+                                }
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = getIconForCategory(category),
+                                imageVector =
+                                    getIconForCategory(
+                                        category
+                                    ),
                                 contentDescription = null,
                                 tint = TextDark
                             )
@@ -670,10 +751,12 @@ fun NewArrivalsSection(
     onProductClick: (Long) -> Unit,
     onSeeAllClick: () -> Unit = {}
 ) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .background(Color.White)
-        .padding(bottom = 16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(bottom = 16.dp)
+    ) {
         Row(
             modifier =
                 Modifier
@@ -706,9 +789,10 @@ fun NewArrivalsSection(
 
 @Composable
 fun NewArrivalCard(product: Product, onProductClick: (Long) -> Unit) {
-    Column(modifier = Modifier
-        .width(144.dp)
-        .clickable { onProductClick(product.id) }) {
+    Column(
+        modifier = Modifier
+            .width(144.dp)
+            .clickable { onProductClick(product.id) }) {
         Box(
             modifier =
                 Modifier
@@ -776,9 +860,10 @@ fun NewArrivalCard(product: Product, onProductClick: (Long) -> Unit) {
 
 @Composable
 fun TrendingProductCard(product: Product, onProductClick: (Long) -> Unit) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onProductClick(product.id) }) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onProductClick(product.id) }) {
         Box(
             modifier =
                 Modifier

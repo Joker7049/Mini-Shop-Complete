@@ -71,10 +71,12 @@ fun ProductListScreen(
                                 colors =
                                         TopAppBarDefaults.topAppBarColors(
                                                 containerColor = Color.White
-                                        )
+                                        ),
+                                windowInsets = WindowInsets(0.dp)
                         )
                 },
-                containerColor = Color(0xFFF9FAFB)
+                containerColor = Color(0xFFF9FAFB),
+                contentWindowInsets = WindowInsets(0.dp)
         ) { paddingValues ->
                 LazyColumn(
                         modifier = Modifier.fillMaxSize().padding(paddingValues),
