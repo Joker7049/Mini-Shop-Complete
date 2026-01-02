@@ -72,10 +72,9 @@ fun CartScreen(viewModel: CartViewModel, onBackClick: () -> Unit, onCheckoutClic
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    val subtotal = cart?.items?.sumOf { it.product.price * it.quantity } ?: 0.0
-    // TODO: Update backend to handle shipping logic calculation
-    val shipping = if (subtotal > 0) 10.0 else 0.0
-    val total = subtotal + shipping
+    val subtotal = cart?.subTotal ?: 0.0
+    val shipping = cart?.shipping ?: 0.0
+    val total = cart?.total ?: 0.0
 
     var showDialog by remember { mutableStateOf(false) }
 
