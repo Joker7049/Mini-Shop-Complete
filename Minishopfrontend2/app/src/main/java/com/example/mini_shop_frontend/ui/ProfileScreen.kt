@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.mini_shop_frontend.model.OrderHistoryDto
 import com.example.mini_shop_frontend.ui.theme.*
 import com.example.mini_shop_frontend.viewmodel.MainViewModel
 
@@ -298,7 +299,7 @@ private fun MenuItem(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun OrderPreviews(orders: List<com.example.mini_shop_frontend.model.OrderHistoryDto>) {
+private fun OrderPreviews(orders: List<OrderHistoryDto>) {
     Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)

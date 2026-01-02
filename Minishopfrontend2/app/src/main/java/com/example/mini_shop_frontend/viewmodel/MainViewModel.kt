@@ -139,7 +139,8 @@ class MainViewModel : ViewModel() {
                                         oldPrice = dto.oldPrice,
                                         category = dto.category,
                                         discountTag = dto.discountTag,
-                                        isBestSeller = dto.isBestSeller ?: false
+                                        isBestSeller = dto.isBestSeller ?: false,
+                                        quantity = dto.quantity
                                 )
                             }
                     _products.value = uiProducts

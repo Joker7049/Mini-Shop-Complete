@@ -304,13 +304,39 @@ fun ProductListCard(product: Product, onClick: () -> Unit) {
                                         fontWeight = FontWeight.Bold,
                                         color = TextDark
                                 )
-                                Text(
-                                        text = product.description?.take(40)
-                                                        ?: "Sustainable Materials",
-                                        fontSize = 12.sp,
-                                        color = TextGrey,
-                                        maxLines = 1
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                                text = product.description?.take(40)
+                                                                ?: "Sustainable Materials",
+                                                fontSize = 12.sp,
+                                                color = TextGrey,
+                                                maxLines = 1,
+                                                modifier = Modifier.weight(1f)
+                                        )
+                                        Surface(
+                                                color =
+                                                        if (product.quantity > 0) Color(0xFFF3F4F6)
+                                                        else Color(0xFFFFEBEE),
+                                                shape = RoundedCornerShape(4.dp)
+                                        ) {
+                                                Text(
+                                                        text =
+                                                                if (product.quantity > 0)
+                                                                        "${product.quantity} avail."
+                                                                else "Out of stock",
+                                                        color =
+                                                                if (product.quantity > 0) TextGrey
+                                                                else Color(0xFFC62828),
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        modifier =
+                                                                Modifier.padding(
+                                                                        horizontal = 4.dp,
+                                                                        vertical = 2.dp
+                                                                )
+                                                )
+                                        }
+                                }
 
                                 Spacer(modifier = Modifier.height(16.dp))
 

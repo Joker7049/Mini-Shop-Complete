@@ -186,12 +186,31 @@ fun ProductHeader(product: Product) {
                     color = TextDark,
                     modifier = Modifier.weight(1f)
             )
-            Text(
-                    text = "$${product.price}",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
-            )
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                        text = "$${product.price}",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryBlue
+                )
+                Surface(
+                        color = if (product.quantity > 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Text(
+                            text =
+                                    if (product.quantity > 0) "${product.quantity} in stock"
+                                    else "Out of stock",
+                            color =
+                                    if (product.quantity > 0) Color(0xFF2E7D32)
+                                    else Color(0xFFC62828),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
