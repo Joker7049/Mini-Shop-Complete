@@ -1,8 +1,8 @@
 package org.example.minishop.model;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
+import org.example.minishop.util.Category;
 
 @Data
 @Entity
@@ -23,5 +23,13 @@ public class Product {
     @Column(name = "imageUrl")
     private String imageUrl;
 
+    private Double rating;
+    private Double oldPrice;
+    private Category category;
+    private String discountTag;
+    private Boolean isBestSeller = false;
 
 }
+
+
+

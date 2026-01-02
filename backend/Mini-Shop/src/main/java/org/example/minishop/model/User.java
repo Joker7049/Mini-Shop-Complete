@@ -1,6 +1,5 @@
 package org.example.minishop.model;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,18 +15,15 @@ import java.util.List;
 @Data
 @Entity
 @AllArgsConstructor
-@Table(
-        name = "users",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_username", columnNames = "username")
-        }
-)
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_username", columnNames = "username"),
+        @UniqueConstraint(name = "uk_email", columnNames = "email")
+})
 @NoArgsConstructor
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
@@ -35,9 +31,18 @@ public class User implements UserDetails {
     private String username;
     private String password;
 
+    private String email;
+    private int points = 0;
+    private int vouchers = 0;
+
+    @OneToOne(mappedBy = "user",  cascade = CascadeType.ALL, orphanRemoval = true)
+    private Cart cart;
+
+    @Enumerated(EnumType.STRING)
+    private MembershipLevel membershipLevel = MembershipLevel.REGULAR;
+
     @Enumerated(EnumType.STRING)
     private Role role;
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -64,4 +69,3 @@ public class User implements UserDetails {
         return true;
     }
 }
-

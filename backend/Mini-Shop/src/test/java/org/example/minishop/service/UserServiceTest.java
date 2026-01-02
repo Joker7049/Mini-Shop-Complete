@@ -32,7 +32,7 @@ public class UserServiceTest {
 
     @Test
     public void registerUser_existedUser_throwsBadRequestException() {
-        SignUpRequest signUpRequest = new SignUpRequest("testUser", "password");
+        SignUpRequest signUpRequest = new SignUpRequest("testUser", "password", "testEmail@gamil.com");
         User user = new User();
 
         when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));

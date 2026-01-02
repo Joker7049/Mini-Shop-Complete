@@ -30,6 +30,13 @@ public class ProductController {
         return ResponseEntity.ok(productService.findAllDtos(page, size));
     }
 
+    @GetMapping("/category/{categoryName}")
+    public ResponseEntity<Page<ProductDto>> findByCategory(@PathVariable String categoryName,
+                                                           @RequestParam(defaultValue = "0") Integer page,
+                                                           @RequestParam(defaultValue = "10") Integer size) {
+        return ResponseEntity.ok(productService.findProductsByCategory(categoryName, page, size));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> save(@Valid @RequestBody ProductDto product) {

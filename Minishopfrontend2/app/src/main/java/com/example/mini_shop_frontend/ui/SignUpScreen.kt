@@ -257,6 +257,7 @@ fun SignUpScreen(
                                 )
                                 SocialButton(
                                         icon = Icons.Default.Check,
+
                                         label = "Google",
                                         modifier = Modifier.weight(1f)
                                 )

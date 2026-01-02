@@ -1,5 +1,6 @@
 package com.example.mini_shop_frontend.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,21 +17,28 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.mini_shop_frontend.ui.theme.*
-import com.example.mini_shop_frontend.utils.UserContext
 import com.example.mini_shop_frontend.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(viewModel: MainViewModel, onBackClick: () -> Unit, onLogoutClick: () -> Unit) {
+fun ProfileScreen(
+        viewModel: MainViewModel,
+        onBackClick: () -> Unit,
+        onLogoutClick: () -> Unit,
+        onMyOrdersClick: () -> Unit
+) {
     val userProfile by viewModel.userProfile.collectAsState()
+    val orders by viewModel.orders.collectAsState()
 
     Scaffold(
             topBar = {
@@ -84,8 +92,12 @@ fun ProfileScreen(viewModel: MainViewModel, onBackClick: () -> Unit, onLogoutCli
             // Menu Sections
             item {
                 MenuSection(title = "MY SHOPPING") {
-                    MenuItem(icon = Icons.Default.Inventory2, label = "My Orders", onClick = {})
-                    OrderPreviews()
+                    MenuItem(
+                            icon = Icons.Default.Inventory2,
+                            label = "My Orders",
+                            onClick = onMyOrdersClick
+                    )
+                    OrderPreviews(orders)
 
                     HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),
@@ -126,9 +138,7 @@ fun ProfileScreen(viewModel: MainViewModel, onBackClick: () -> Unit, onLogoutCli
             // Logout Button
             item {
                 Button(
-                        onClick = {
-                            onLogoutClick()
-                        },
+                        onClick = { onLogoutClick() },
                         modifier = Modifier.fillMaxWidth().padding(HorizontalPadding).height(56.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors =
@@ -288,21 +298,37 @@ private fun MenuItem(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun OrderPreviews() {
-    LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+private fun OrderPreviews(orders: List<com.example.mini_shop_frontend.model.OrderHistoryDto>) {
+    Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(3) { index ->
-            Surface(
-                    modifier = Modifier.size(80.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (index == 0) Color(0xFF5A8B5D) else Color(0xFFF3F4F6)
-            ) {
-                // Placeholder images
-                if (index == 0) {
+        // Show last 4 orders as a preview
+        orders.take(4).forEach { order ->
+            AsyncImage(
+                    model = order.productImageUrl,
+                    contentDescription = null,
+                    modifier =
+                            Modifier.size(60.dp) // Slightly smaller for preview
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFF3F4F6)),
+                    contentScale = ContentScale.Crop
+            )
+        }
+
+        if (orders.isEmpty()) {
+            repeat(3) {
+                Surface(
+                        modifier = Modifier.size(60.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFF3F4F6)
+                ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("Order\n1", color = Color.White, fontWeight = FontWeight.Bold)
+                        Icon(
+                                Icons.Default.ShoppingBag,
+                                contentDescription = null,
+                                tint = Color.LightGray
+                        )
                     }
                 }
             }

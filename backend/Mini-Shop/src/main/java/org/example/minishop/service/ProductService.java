@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.minishop.dto.ProductDto;
 import org.example.minishop.model.Product;
 import org.example.minishop.repository.ProductRepository;
+import org.example.minishop.util.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +30,15 @@ public class ProductService {
 
         log.debug("Fetching all products");
         return productRepository.findAll(pageable)
+                .map(this::mapToDto);
+    }
+
+    public Page<ProductDto> findProductsByCategory(String category, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Category categoryEnum = Category.fromDisplayName(category);
+
+        log.debug("Fetching products by category: {}", category);
+        return productRepository.findByCategory(pageable, categoryEnum)
                 .map(this::mapToDto);
     }
 
@@ -63,6 +73,13 @@ public class ProductService {
         dto.setPrice(product.getPrice());
         dto.setQuantity(product.getQuantity());
         dto.setImageUrl(product.getImageUrl());
+        dto.setRating(product.getRating());
+        dto.setOldPrice(product.getOldPrice());
+        if (product.getCategory() != null) {
+            dto.setCategory(product.getCategory().getDisplayName());
+        }
+        dto.setDiscountTag(product.getDiscountTag());
+        dto.setIsBestSeller(product.getIsBestSeller());
         return dto;
     }
 
@@ -73,6 +90,15 @@ public class ProductService {
         product.setPrice(dto.getPrice());
         product.setQuantity(dto.getQuantity());
         product.setImageUrl(dto.getImageUrl());
+        product.setRating(dto.getRating());
+        product.setOldPrice(dto.getOldPrice());
+
+        if (dto.getCategory() != null) {
+            product.setCategory(Category.fromDisplayName(dto.getCategory()));
+        }
+
+        product.setDiscountTag(dto.getDiscountTag());
+        product.setIsBestSeller(dto.getIsBestSeller());
         return product;
     }
 }

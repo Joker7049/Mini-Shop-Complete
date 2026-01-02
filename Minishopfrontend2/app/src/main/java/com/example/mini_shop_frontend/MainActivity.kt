@@ -28,7 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
@@ -59,10 +59,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -91,7 +89,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.mini_shop_frontend.ui.ProductDetailScreen
+import com.example.mini_shop_frontend.ui.theme.PrimaryBlue
+import com.example.mini_shop_frontend.utils.TokenManager
+import com.example.mini_shop_frontend.viewmodel.CartViewModel
 import com.example.mini_shop_frontend.viewmodel.MainViewModel
+import kotlinx.coroutines.delay
 
 // --- Constants & Color Palette from Tailwind Config ---
 val PrimaryBlue = Color(0xFF137FEC)
@@ -103,6 +105,7 @@ val TextGrey = Color(0xFF617589)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TokenManager.initialize(applicationContext)
         setContent { ShopperTheme { ShopperApp() } }
     }
 }
@@ -235,7 +238,7 @@ val trendingProducts =
 // --- Composable: Main App Structure ---
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ShopperApp(viewModel: MainViewModel = viewModel()) {
+fun ShopperApp(viewModel: MainViewModel = viewModel(), cartViewModel: CartViewModel = viewModel()) {
     val navController = rememberNavController()
     val products by viewModel.products.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -243,17 +246,19 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val snackMessage by cartViewModel.snackMessage.collectAsState()
 
     LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn) {
+        val isAuthScreen = currentRoute == "login" || currentRoute == "signup"
+
+        if (isLoggedIn && isAuthScreen) {
             navController.navigate("home") {
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
             }
         }
     }
-
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
 
     val selectedTab =
         when {
@@ -266,7 +271,10 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
 
     Scaffold(
         bottomBar = {
-            if (currentRoute != "login" && currentRoute != "signup") {
+            if (currentRoute != "login" &&
+                currentRoute != "signup" &&
+                currentRoute != "splash"
+            ) {
                 BottomNavigationBar(selectedTab) { index ->
                     val destination =
                         when (index) {
@@ -278,9 +286,11 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
                         }
                     if (currentRoute != destination) {
                         navController.navigate(destination) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
+                            popUpTo(
+                                navController
+                                    .graph
+                                    .startDestinationId
+                            ) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -290,9 +300,11 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
         },
         containerColor = BackgroundLight
     ) { paddingValues ->
+        LaunchedEffect(Unit) { cartViewModel.fetchCart() }
+
         NavHost(
             navController = navController,
-            startDestination = "login",
+            startDestination = "splash",
             modifier = Modifier.padding(paddingValues)
         ) {
             composable("home") {
@@ -308,7 +320,9 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
                     onCategoryClick = { categoryName ->
                         viewModel.selectCategory(categoryName)
                         navController.navigate("product_list")
-                    }
+                    },
+                    onCartClick = { navController.navigate("cart") },
+                    onProfileClick = { navController.navigate("profile") }
                 )
             }
             composable(
@@ -322,7 +336,9 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
                     ProductDetailScreen(
                         product = product,
                         onBackClick = { navController.popBackStack() },
-                        onAddToCartClick = { /* Handle cart */ }
+                        onAddToCartClick = {
+                            cartViewModel.addToCart(product.id, 1)
+                        }
                     )
                 }
             }
@@ -342,18 +358,26 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
                     onBackClick = { navController.popBackStack() },
                     onLogoutClick = {
                         viewModel.logout()
-                        navController.navigate("login"){
-                            popUpTo(0){inclusive = true}
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
                         }
-                    }
+                    },
+                    onMyOrdersClick = { navController.navigate("my_orders") }
                 )
             }
-            // Placeholder for Cart
+            composable("my_orders") {
+                val orders by viewModel.orders.collectAsState()
+                com.example.mini_shop_frontend.ui.OrderListScreen(
+                    orders = orders,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
             composable("cart") {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) { Text("Cart Screen Placeholder") }
+                com.example.mini_shop_frontend.ui.CartScreen(
+                    viewModel = cartViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onCheckoutClick = { /* Handle checkout */ }
+                )
             }
             composable("login") {
                 com.example.mini_shop_frontend.ui.LoginScreen(
@@ -373,6 +397,18 @@ fun ShopperApp(viewModel: MainViewModel = viewModel()) {
                     onBackClick = { navController.popBackStack() }
                 )
             }
+            composable("splash") {
+                com.example.mini_shop_frontend.ui.SplashScreen(
+                    navController = navController,
+                    isLoggedIn = isLoggedIn
+                )
+            }
+        }
+        snackMessage?.let { message ->
+            CustomToast(
+                message = message,
+                onDismiss = {cartViewModel.showSnack(null)}
+            )
         }
     }
 }
@@ -386,7 +422,9 @@ fun HomeScreen(
     error: String?,
     onProductClick: (Long) -> Unit,
     onSeeAllClick: () -> Unit,
-    onCategoryClick: (String) -> Unit
+    onCategoryClick: (String) -> Unit,
+    onCartClick: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
     // Main Content List
     LazyColumn(
@@ -394,7 +432,9 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Sticky Header
-        stickyHeader { TopAppBar() }
+        stickyHeader {
+            TopAppBar(onCartClick = onCartClick, onProfileClick = onProfileClick)
+        }
 
         // Search Bar
         item { SearchBar(modifier = Modifier.padding(horizontal = 16.dp)) }
@@ -473,7 +513,7 @@ fun HomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBar() {
+fun TopAppBar(onCartClick: () -> Unit, onProfileClick: () -> Unit) {
     Surface(color = Color.White, shadowElevation = 2.dp, modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier =
@@ -505,7 +545,10 @@ fun TopAppBar() {
             // Actions
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box {
-                    IconButton(onClick = {}, modifier = Modifier.size(40.dp)) {
+                    IconButton(
+                        onClick = onCartClick,
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(
                             Icons.Outlined.ShoppingCart,
                             contentDescription = "Cart",
@@ -530,7 +573,10 @@ fun TopAppBar() {
                                 )
                     )
                 }
-                IconButton(onClick = {}, modifier = Modifier.size(40.dp)) {
+                IconButton(
+                    onClick = onProfileClick,
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(
                         Icons.Outlined.AccountCircle,
                         contentDescription = "Profile",
@@ -993,9 +1039,9 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
                 Triple("Home", Icons.Default.Home, Icons.Outlined.Home),
                 Triple("Catalog", Icons.Default.GridView, Icons.Outlined.GridView),
                 Triple(
-                    "Wishlist",
-                    Icons.Default.Favorite,
-                    Icons.Outlined.FavoriteBorder
+                    "Cart",
+                    Icons.Outlined.ShoppingCart,
+                    Icons.Outlined.ShoppingCart
                 ),
                 Triple("Account", Icons.Default.Person, Icons.Outlined.Person)
             )
@@ -1031,6 +1077,43 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
         }
     }
 }
+
+
+@Composable
+fun CustomToast(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    LaunchedEffect(Unit) {
+        delay(3000)
+        onDismiss()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(40.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Surface(
+            color = PrimaryBlue,
+            shape = RoundedCornerShape(50.dp),
+            tonalElevation = 8.dp,
+            shadowElevation = 8.dp
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.CheckCircle, "Success", tint = Color.White)
+                Spacer(Modifier.width(8.dp))
+                Text(message, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+
+}
+
 
 // --- Theme Wrapper (Minimal) ---
 @Composable

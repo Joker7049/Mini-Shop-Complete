@@ -1,12 +1,13 @@
 package org.example.minishop.controller;
 
-
 import jakarta.validation.constraints.NotBlank;
+import org.example.minishop.dto.UserProfileDto;
 import org.example.minishop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,12 +25,17 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileDto> getCurrentUser(Authentication authentication) {
+        String username = authentication.getName();
+        UserProfileDto profile = userService.getUserProfile(username);
+        return ResponseEntity.ok(profile);
+    }
+
     @DeleteMapping("/{username}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> deleteUser(
-            @NotBlank(message = "username cannot be empty")
-            @PathVariable String username) {
-
+            @NotBlank(message = "username cannot be empty") @PathVariable String username) {
 
         userService.delete(username);
 

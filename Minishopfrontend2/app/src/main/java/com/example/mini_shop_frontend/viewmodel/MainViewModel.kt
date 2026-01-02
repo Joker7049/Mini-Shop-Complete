@@ -6,10 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.mini_shop_frontend.Product
 import com.example.mini_shop_frontend.model.LoginRequest
 import com.example.mini_shop_frontend.model.LoginResponse
+import com.example.mini_shop_frontend.model.OrderHistoryDto
 import com.example.mini_shop_frontend.model.SignUpRequest
 import com.example.mini_shop_frontend.model.UserProfileDto
-import com.example.mini_shop_frontend.network.ProductResponse
 import com.example.mini_shop_frontend.network.RetrofitInstance
+import com.example.mini_shop_frontend.utils.TokenManager
 import com.example.mini_shop_frontend.utils.UserContext
 import com.example.mini_shop_frontend.utils.UserContext.token
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +40,17 @@ class MainViewModel : ViewModel() {
 
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+
+    private val _orders = MutableStateFlow<List<OrderHistoryDto>>(emptyList())
+    val orders = _orders.asStateFlow()
+
+    init {
+        TokenManager.getToken()?.let { token ->
+            UserContext.setUserData(token, "", "")
+            _isLoggedIn.value = true
+            fetchAllData()
+        }
+    }
 
     fun login(username: String, password: String) {
         viewModelScope.launch {
@@ -79,40 +91,62 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun fetchOrderHistory() {
+        viewModelScope.launch {
+            try {
+                UserContext.token?.let { token ->
+                    val response = RetrofitInstance.api.getMyOrders(token)
+                    if (response.isSuccessful) {
+                        _orders.value = response.body() ?: emptyList()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("OrderHistory", "Failed to fetch orders", e)
+                // We don't want to show a big error message for history usually,
+                // but let's log it.
+            }
+        }
+    }
+
     fun fetchProducts() {
         viewModelScope.launch {
             // _isLoading.value = true // Already loading from loginAndFetch
             try {
                 val token = UserContext.token ?: throw Exception("Not Logged In")
-                var response = ProductResponse(emptyList(), 0, 0, false)
-                if (_selectedCategory.value == null) {
-                    response = RetrofitInstance.api.getProducts(token)
-                } else {
-                    response =
+                val response =
+                        if (_selectedCategory.value == null) {
+                            RetrofitInstance.api.getProducts(token)
+                        } else {
                             RetrofitInstance.api.getProductsByCategory(
                                     token,
                                     _selectedCategory.value!!
                             )
-                }
-
-                // Map Backend DTO to UI Model
-                val uiProducts =
-                        response.content.map { dto ->
-                            Product(
-                                    id = dto.id,
-                                    name = dto.name,
-                                    description = dto.description,
-                                    imageUrl = dto.imageUrl ?: "https://via.placeholder.com/150",
-                                    rating = dto.rating,
-                                    price = dto.price,
-                                    oldPrice = dto.oldPrice,
-                                    category = dto.category,
-                                    discountTag = dto.discountTag,
-                                    isBestSeller = dto.isBestSeller ?: false
-                            )
                         }
-                _products.value = uiProducts
-                _error.value = null
+
+                if (response.isSuccessful) {
+                    val content = response.body()?.content ?: emptyList()
+                    // Map Backend DTO to UI Model
+                    val uiProducts =
+                            content.map { dto ->
+                                Product(
+                                        id = dto.id,
+                                        name = dto.name,
+                                        description = dto.description,
+                                        imageUrl = dto.imageUrl
+                                                        ?: "https://via.placeholder.com/150",
+                                        rating = dto.rating,
+                                        price = dto.price,
+                                        oldPrice = dto.oldPrice,
+                                        category = dto.category,
+                                        discountTag = dto.discountTag,
+                                        isBestSeller = dto.isBestSeller ?: false
+                                )
+                            }
+                    _products.value = uiProducts
+                    _error.value = null
+                } else {
+                    _error.value = "Failed to load products: ${response.code()}"
+                }
             } catch (e: Exception) {
                 _error.value = "Failed to load products: ${e.message}"
                 e.printStackTrace()
@@ -124,7 +158,16 @@ class MainViewModel : ViewModel() {
 
     private fun fetchCategories() {
         viewModelScope.launch {
-            token?.let { token -> _categories.value = RetrofitInstance.api.getCategories(token) }
+            try {
+                UserContext.token?.let { token ->
+                    val response = RetrofitInstance.api.getCategories(token)
+                    if (response.isSuccessful) {
+                        _categories.value = response.body() ?: emptyList()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("Categories", "Failed to fetch categories", e)
+            }
         }
     }
 
@@ -132,7 +175,17 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 token?.let { token ->
-                    _userProfile.value = RetrofitInstance.api.getUserProfile(token)
+                    val response = RetrofitInstance.api.getUserProfile(token)
+                    if (response.isSuccessful) {
+                        val profile = response.body()!!
+                        _userProfile.value = profile
+
+                        UserContext.setUserData(
+                                token.removePrefix("Bearer "),
+                                profile.username,
+                                profile.role
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ProfileError", "Failed to fetch user profile", e)
@@ -144,9 +197,8 @@ class MainViewModel : ViewModel() {
     private fun handleAuthSuccess(response: LoginResponse) {
         UserContext.setUserData(response.token, response.username, response.role)
         _isLoggedIn.value = true
-        fetchCategories()
-        fetchUserProfile()
-        fetchProducts()
+        TokenManager.saveToken(response.token)
+        fetchAllData()
     }
 
     fun selectCategory(category: String?) {
@@ -156,6 +208,16 @@ class MainViewModel : ViewModel() {
 
     fun logout() {
         UserContext.clear()
+        TokenManager.clearToken()
         _isLoggedIn.value = false
+        _orders.value = emptyList()
+        _userProfile.value = null
+    }
+
+    private fun fetchAllData() {
+        fetchCategories()
+        fetchProducts()
+        fetchUserProfile()
+        fetchOrderHistory()
     }
 }

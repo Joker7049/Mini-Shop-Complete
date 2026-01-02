@@ -2,6 +2,7 @@ package org.example.minishop.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.example.minishop.dto.OrderHistoryResponse;
 import org.example.minishop.dto.OrderRequest;
 import org.example.minishop.service.OrderService;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +39,8 @@ public class OrderController {
     }
 
     @GetMapping("/my-orders")
-    public ResponseEntity<List<OrderRequest>> getMyOrders(Principal principal) {
-        List<OrderRequest> orders = orderService.getAllOrders(principal.getName());
+    public ResponseEntity<List<OrderHistoryResponse>> getMyOrders(Principal principal) {
+        List<OrderHistoryResponse> orders = orderService.getAllOrders(principal.getName());
         return ResponseEntity.ok(orders);
     }
 }

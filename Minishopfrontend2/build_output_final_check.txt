@@ -1,0 +1,33 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.13/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:clean
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:mergeDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/CartScreen.kt:57:52 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/OrderListScreen.kt:62:52 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/ProductDetailScreen.kt:217:36 'val Icons.Outlined.ArrowForwardIos: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.ArrowForwardIos.
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/ProductDetailScreen.kt:342:40 'val Icons.Outlined.ArrowForwardIos: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.ArrowForwardIos.
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/ProductListScreen.kt:58:71 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/ProductListScreen.kt:175:44 'val Icons.Filled.List: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.List.
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/ProfileScreen.kt:54:52 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/ProfileScreen.kt:134:51 'val Icons.Filled.Help: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Help.
+w: file:///C:/Users/asada/IntelliJ%20projects/Spring%20Boot%20projects/Mini-Shop-Full/Minishopfrontend2/app/src/main/java/com/example/mini_shop_frontend/ui/SignUpScreen.kt:76:69 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+
+BUILD SUCCESSFUL in 33s
+15 actionable tasks: 15 executed

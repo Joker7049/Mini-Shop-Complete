@@ -1,6 +1,5 @@
 package org.example.minishop.dto;
 
-
 import ch.qos.logback.core.util.StringUtil;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -27,4 +26,10 @@ public class ProductDto {
 
     @URL(protocol = "http", host = "127.0.0.1", message = "Image URL must be a valid URL starting with http://")
     private String imageUrl;
+
+    private Double rating;
+    private Double oldPrice;
+    private String category;
+    private String discountTag;
+    private Boolean isBestSeller;
 }

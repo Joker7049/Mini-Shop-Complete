@@ -59,6 +59,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // security-crypto
+    implementation(libs.androidx.security.crypto)
+
     // coil
     implementation(libs.coil.compose)
     implementation(libs.androidx.material.icons.extended) // Optional, for specific icons
