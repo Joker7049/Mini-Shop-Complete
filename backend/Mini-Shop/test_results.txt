@@ -32,22 +32,18 @@
 [INFO] -------------------------------------------------------
 [INFO] Running org.example.minishop.service.OrderServiceTest
 Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build what is described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
 WARNING: A Java agent has been loaded dynamically (C:\Users\asada\.m2\repository\net\bytebuddy\byte-buddy-agent\1.15.11\byte-buddy-agent-1.15.11.jar)
 WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
 WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
 WARNING: Dynamic loading of agents will be disallowed by default in a future release
-OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
-13:16:08.295 [main] INFO org.example.minishop.service.OrderService -- Request to place order. User: testUser, ProductId: 1, Quantity: 5
-13:16:08.303 [main] INFO org.example.minishop.service.OrderService -- Order placed successfully. Order ID: 0
-13:16:08.322 [main] INFO org.example.minishop.service.OrderService -- Request to place order. User: testUser, ProductId: 1, Quantity: 5
-13:16:08.323 [main] ERROR org.example.minishop.service.OrderService -- Order failed. User not found: testUser
-13:16:08.340 [main] INFO org.example.minishop.service.OrderService -- Request to checkout for user: testUser
-13:16:08.343 [main] INFO org.example.minishop.service.OrderService -- Checkout completed successfully. Order ID: 0
-13:16:08.355 [main] INFO org.example.minishop.service.OrderService -- Request to place order. User: testUser, ProductId: 1, Quantity: 5
-13:16:08.356 [main] WARN org.example.minishop.service.OrderService -- Order failed. Insufficient inventory for Product: testProduct. Requested: 5, Available: 2
-13:16:08.367 [main] INFO org.example.minishop.service.OrderService -- Request to place order. User: testUser, ProductId: 1, Quantity: 5
-13:16:08.367 [main] ERROR org.example.minishop.service.OrderService -- Order failed. Product not found: 1
-[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.161 s -- in org.example.minishop.service.OrderServiceTest
+14:04:43.246 [main] INFO org.example.minishop.service.OrderService -- Request to place order. User: testUser, ProductId: 1, Quantity: 5
+14:04:43.264 [main] INFO org.example.minishop.service.OrderService -- Request to place order. User: testUser, ProductId: 1, Quantity: 5
+14:04:43.277 [main] INFO org.example.minishop.service.OrderService -- Request to checkout for user: testUser
+14:04:43.290 [main] INFO org.example.minishop.service.OrderService -- Checkout completed successfully. Order ID: 0
+14:04:43.294 [main] INFO org.example.minishop.service.OrderService -- Request to place order. User: testUser, ProductId: 1, Quantity: 5
+14:04:43.297 [main] INFO org.example.minishop.service.OrderService -- Request to place order. User: testUser, ProductId: 1, Quantity: 5
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.361 s -- in org.example.minishop.service.OrderServiceTest
 [INFO] 
 [INFO] Results:
 [INFO] 
@@ -56,6 +52,6 @@ OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader clas
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  5.600 s
-[INFO] Finished at: 2026-01-02T13:16:08+03:30
+[INFO] Total time:  3.805 s
+[INFO] Finished at: 2026-01-02T14:04:43+03:30
 [INFO] ------------------------------------------------------------------------

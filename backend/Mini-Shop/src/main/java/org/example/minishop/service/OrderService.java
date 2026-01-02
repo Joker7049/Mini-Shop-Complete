@@ -7,8 +7,8 @@ import org.example.minishop.exception.BadRequestException;
 import org.example.minishop.exception.ResourceNotFoundException;
 import org.example.minishop.model.Cart;
 import org.example.minishop.model.CartItem;
-import org.example.minishop.model.OrderItem;
 import org.example.minishop.model.Order;
+import org.example.minishop.model.OrderItem;
 import org.example.minishop.model.Product;
 import org.example.minishop.model.Status;
 import org.example.minishop.model.User;
@@ -50,36 +50,35 @@ public class OrderService {
                 User user = userRepository.findByUsername(username)
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
-                // Create ONE Order for the whole checkout
+                // Create one Order Header
                 Order order = new Order();
                 order.setUser(user);
                 order.setOrder_date(LocalDateTime.now());
                 order.setStatus(Status.PENDING);
+                order.setTotal_price(cart.getTotal());
 
-                double total = 0;
                 for (CartItem cartItem : cart.getItems()) {
                         Product product = cartItem.getProduct();
                         int quantity = cartItem.getQuantity();
 
+                        // Check Inventory
                         if (product.getQuantity() < quantity) {
-                                throw new BadRequestException("Not enough inventory for: " + product.getName());
+                                throw new BadRequestException("Not enough inventory for " + product.getName());
                         }
+
+                        // Update Inventory
                         product.setQuantity(product.getQuantity() - quantity);
 
+                        // Create Order Item
                         OrderItem orderItem = new OrderItem();
                         orderItem.setOrder(order);
                         orderItem.setProduct(product);
                         orderItem.setQuantity(quantity);
                         orderItem.setPrice(product.getPrice());
-
                         order.getItems().add(orderItem);
-                        total += product.getPrice() * quantity;
                 }
 
-                order.setTotal_price(total);
                 orderRepository.save(order);
-
-                // Clear the cart
                 cartService.clearCart(username);
                 log.info("Checkout completed successfully. Order ID: {}", order.getId());
         }
@@ -89,51 +88,32 @@ public class OrderService {
                 log.info("Request to place order. User: {}, ProductId: {}, Quantity: {}", username, productId,
                                 quantity);
 
-                // 1. Find Product
                 Product product = productRepository.findById(productId)
-                                .orElseThrow(() -> {
-                                        log.error("Order failed. Product not found: {}", productId);
-                                        return new ResourceNotFoundException("Product not found with ID: " + productId);
-                                });
+                                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-                // 2. Find User
                 User user = userRepository.findByUsername(username)
-                                .orElseThrow(() -> {
-                                        log.error("Order failed. User not found: {}", username);
-                                        return new ResourceNotFoundException("User not found: " + username);
-                                });
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-                // 3. Check Inventory
                 if (product.getQuantity() < quantity) {
-                        log.warn("Order failed. Insufficient inventory for Product: {}. Requested: {}, Available: {}",
-                                        product.getName(), quantity, product.getQuantity());
-                        throw new BadRequestException("Not enough inventory. Available: " + product.getQuantity());
+                        throw new BadRequestException("Not enough inventory");
                 }
 
-                // 4. Update Inventory
-                log.debug("Updating inventory for product: {}. Old: {}, New: {}", product.getName(),
-                                product.getQuantity(),
-                                product.getQuantity() - quantity);
                 product.setQuantity(product.getQuantity() - quantity);
 
-                // 5. Create Order
                 Order order = new Order();
                 order.setUser(user);
                 order.setOrder_date(LocalDateTime.now());
                 order.setStatus(Status.PENDING);
-                order.setTotal_price(product.getPrice() * quantity); // This line is kept for single item order total
+                order.setTotal_price(product.getPrice() * quantity);
 
-                // Create OrderItem
                 OrderItem item = new OrderItem();
                 item.setOrder(order);
                 item.setProduct(product);
                 item.setQuantity(quantity);
                 item.setPrice(product.getPrice());
-
                 order.getItems().add(item);
 
-                Order savedOrder = orderRepository.save(order);
-                log.info("Order placed successfully. Order ID: {}", savedOrder.getId());
+                orderRepository.save(order);
         }
 
         @Transactional
@@ -141,22 +121,20 @@ public class OrderService {
                 User user = userRepository.findByUsername(username)
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
+                // Flatten all OrderItems from all Orders into a list of responses
                 return user.getOrders().stream()
-                                .flatMap(order -> order.getItems().stream()
-                                                .map(item -> {
-                                                        return OrderHistoryResponse.builder()
-                                                                        .id((long) order.getId())
-                                                                        .productId(item.getProduct().getId())
-                                                                        .productName(item.getProduct().getName())
-                                                                        .orderDate(order.getOrder_date())
-                                                                        .productImageUrl(
-                                                                                        item.getProduct().getImageUrl())
-                                                                        .status(order.getStatus())
-                                                                        .quantity(item.getQuantity())
-                                                                        .totalPrice(item.getPrice()
-                                                                                        * item.getQuantity())
-                                                                        .build();
-                                                }))
+                                .flatMap(order -> order.getItems().stream().map(item -> {
+                                        return OrderHistoryResponse.builder()
+                                                        .id((long) order.getId())
+                                                        .productId(item.getProduct().getId())
+                                                        .productName(item.getProduct().getName())
+                                                        .orderDate(order.getOrder_date())
+                                                        .productImageUrl(item.getProduct().getImageUrl())
+                                                        .status(order.getStatus())
+                                                        .quantity(item.getQuantity())
+                                                        .totalPrice(item.getPrice() * item.getQuantity())
+                                                        .build();
+                                }))
                                 .collect(Collectors.toList());
         }
 }

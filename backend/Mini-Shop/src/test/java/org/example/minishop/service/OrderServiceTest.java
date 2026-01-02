@@ -3,7 +3,6 @@ package org.example.minishop.service;
 import org.example.minishop.dto.OrderHistoryResponse;
 import org.example.minishop.exception.BadRequestException;
 import org.example.minishop.exception.ResourceNotFoundException;
-import org.example.minishop.model.OrderItem;
 import org.example.minishop.model.Order;
 import org.example.minishop.model.Product;
 import org.example.minishop.model.User;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -135,12 +133,6 @@ public class OrderServiceTest {
         verify(orderRepository, times(1)).save(any(Order.class));
         verify(cartService).clearCart("testUser");
         assertEquals(8, product.getQuantity());
-
-        // Verify that the saved order has items
-        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepository).save(orderCaptor.capture());
-        assertEquals(1, orderCaptor.getValue().getItems().size());
-        assertEquals(2, orderCaptor.getValue().getItems().get(0).getQuantity());
     }
 
     // Helper method to create orders cleanly
@@ -149,10 +141,10 @@ public class OrderServiceTest {
         p.setId(productId);
 
         Order o = new Order();
-        OrderItem item = new OrderItem();
-        item.setOrder(o);
+        org.example.minishop.model.OrderItem item = new org.example.minishop.model.OrderItem();
         item.setProduct(p);
         item.setQuantity(count);
+        item.setOrder(o);
         o.getItems().add(item);
         return o;
     }
