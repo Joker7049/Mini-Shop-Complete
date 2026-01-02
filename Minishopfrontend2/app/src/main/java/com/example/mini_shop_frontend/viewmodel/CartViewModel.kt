@@ -64,6 +64,29 @@ class CartViewModel : ViewModel() {
         }
     }
 
+    fun checkout(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                val token = UserContext.token ?: throw Exception("Not logged in")
+                val response = RetrofitInstance.api.checkout(token)
+                if (response.isSuccessful) {
+                    showSnack("Checkout successful! Order placed.")
+                    _cart.value = null // Empty locally
+                    onSuccess()
+                    fetchCart() // Refresh just in case
+                } else {
+                    _error.value = "Checkout failed: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Unknown error"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun showSnack(message: String?) {
         _snackMessage.value = message
     }

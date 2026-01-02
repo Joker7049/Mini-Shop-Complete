@@ -1,6 +1,5 @@
 package org.example.minishop.model;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,10 +20,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private Status status;
     private double total_price;
-    private int count;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<OrderItem> items = new java.util.ArrayList<>();
 }
-

@@ -27,4 +27,25 @@ public class Cart {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
 
+
+    public Double getSubTotal() {
+        return items.stream()
+                .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
+                .sum();
+    }
+
+    public Double getShipping() {
+        if (items.isEmpty()) {
+            return 0.0;
+        }
+        if (getSubTotal() >= 100) {
+            return 0.0;
+        }
+        return 10.0;
+    }
+
+    public Double getTotal() {
+        return getSubTotal() + getShipping();
+    }
+
 }

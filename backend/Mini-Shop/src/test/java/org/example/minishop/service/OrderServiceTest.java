@@ -1,9 +1,9 @@
 package org.example.minishop.service;
 
 import org.example.minishop.dto.OrderHistoryResponse;
-import org.example.minishop.dto.OrderRequest;
 import org.example.minishop.exception.BadRequestException;
 import org.example.minishop.exception.ResourceNotFoundException;
+import org.example.minishop.model.OrderItem;
 import org.example.minishop.model.Order;
 import org.example.minishop.model.Product;
 import org.example.minishop.model.User;
@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -34,6 +35,8 @@ public class OrderServiceTest {
     private UserRepository userRepository;
     @Mock
     private ProductRepository productRepository;
+    @Mock
+    private CartService cartService;
 
     @InjectMocks
     private OrderService orderService;
@@ -112,14 +115,45 @@ public class OrderServiceTest {
 
     }
 
+    @Test
+    void checkout_ShouldPlaceOrdersAndClearCart() {
+        // Arrange
+        org.example.minishop.model.Cart cart = new org.example.minishop.model.Cart();
+        org.example.minishop.model.CartItem item1 = new org.example.minishop.model.CartItem();
+        item1.setProduct(product);
+        item1.setQuantity(2);
+        cart.setItems(new java.util.ArrayList<>(List.of(item1)));
+
+        when(cartService.getCart("testUser")).thenReturn(cart);
+        when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        orderService.checkout("testUser");
+
+        // Assert
+        verify(orderRepository, times(1)).save(any(Order.class));
+        verify(cartService).clearCart("testUser");
+        assertEquals(8, product.getQuantity());
+
+        // Verify that the saved order has items
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        assertEquals(1, orderCaptor.getValue().getItems().size());
+        assertEquals(2, orderCaptor.getValue().getItems().get(0).getQuantity());
+    }
+
     // Helper method to create orders cleanly
     private Order createOrder(long productId, int count) {
         Product p = new Product();
         p.setId(productId);
 
         Order o = new Order();
-        o.setProduct(p);
-        o.setCount(count);
+        OrderItem item = new OrderItem();
+        item.setOrder(o);
+        item.setProduct(p);
+        item.setQuantity(count);
+        o.getItems().add(item);
         return o;
     }
 }

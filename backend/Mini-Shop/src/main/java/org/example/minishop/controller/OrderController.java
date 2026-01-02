@@ -38,6 +38,13 @@ public class OrderController {
         return ResponseEntity.ok(Collections.singletonMap("message", "Order placed successfully"));
     }
 
+    @PostMapping("/checkout")
+    public ResponseEntity<Map<String, String>> checkout(Principal principal) {
+        log.info("Received request to checkout for user: {}", principal.getName());
+        orderService.checkout(principal.getName());
+        return ResponseEntity.ok(Collections.singletonMap("message", "Checkout successful"));
+    }
+
     @GetMapping("/my-orders")
     public ResponseEntity<List<OrderHistoryResponse>> getMyOrders(Principal principal) {
         List<OrderHistoryResponse> orders = orderService.getAllOrders(principal.getName());

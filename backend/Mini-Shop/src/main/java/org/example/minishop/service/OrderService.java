@@ -3,9 +3,11 @@ package org.example.minishop.service;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.example.minishop.dto.OrderHistoryResponse;
-import org.example.minishop.dto.OrderRequest;
 import org.example.minishop.exception.BadRequestException;
 import org.example.minishop.exception.ResourceNotFoundException;
+import org.example.minishop.model.Cart;
+import org.example.minishop.model.CartItem;
+import org.example.minishop.model.OrderItem;
 import org.example.minishop.model.Order;
 import org.example.minishop.model.Product;
 import org.example.minishop.model.Status;
@@ -26,12 +28,60 @@ public class OrderService {
         private final OrderRepository orderRepository;
         private final UserRepository userRepository;
         private final ProductRepository productRepository;
+        private final CartService cartService;
 
         public OrderService(OrderRepository orderRepository, UserRepository userRepository,
-                        ProductRepository productRepository) {
+                        ProductRepository productRepository, CartService cartService) {
                 this.orderRepository = orderRepository;
                 this.userRepository = userRepository;
                 this.productRepository = productRepository;
+                this.cartService = cartService;
+        }
+
+        @Transactional
+        public void checkout(String username) {
+                log.info("Request to checkout for user: {}", username);
+                Cart cart = cartService.getCart(username);
+                if (cart.getItems().isEmpty()) {
+                        log.warn("Checkout failed. Cart is empty for user: {}", username);
+                        throw new BadRequestException("Cannot checkout an empty cart");
+                }
+
+                User user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+
+                // Create ONE Order for the whole checkout
+                Order order = new Order();
+                order.setUser(user);
+                order.setOrder_date(LocalDateTime.now());
+                order.setStatus(Status.PENDING);
+
+                double total = 0;
+                for (CartItem cartItem : cart.getItems()) {
+                        Product product = cartItem.getProduct();
+                        int quantity = cartItem.getQuantity();
+
+                        if (product.getQuantity() < quantity) {
+                                throw new BadRequestException("Not enough inventory for: " + product.getName());
+                        }
+                        product.setQuantity(product.getQuantity() - quantity);
+
+                        OrderItem orderItem = new OrderItem();
+                        orderItem.setOrder(order);
+                        orderItem.setProduct(product);
+                        orderItem.setQuantity(quantity);
+                        orderItem.setPrice(product.getPrice());
+
+                        order.getItems().add(orderItem);
+                        total += product.getPrice() * quantity;
+                }
+
+                order.setTotal_price(total);
+                orderRepository.save(order);
+
+                // Clear the cart
+                cartService.clearCart(username);
+                log.info("Checkout completed successfully. Order ID: {}", order.getId());
         }
 
         @Transactional
@@ -69,11 +119,18 @@ public class OrderService {
                 // 5. Create Order
                 Order order = new Order();
                 order.setUser(user);
-                order.setProduct(product);
                 order.setOrder_date(LocalDateTime.now());
-                order.setCount(quantity);
                 order.setStatus(Status.PENDING);
-                order.setTotal_price(product.getPrice() * quantity);
+                order.setTotal_price(product.getPrice() * quantity); // This line is kept for single item order total
+
+                // Create OrderItem
+                OrderItem item = new OrderItem();
+                item.setOrder(order);
+                item.setProduct(product);
+                item.setQuantity(quantity);
+                item.setPrice(product.getPrice());
+
+                order.getItems().add(item);
 
                 Order savedOrder = orderRepository.save(order);
                 log.info("Order placed successfully. Order ID: {}", savedOrder.getId());
@@ -85,19 +142,21 @@ public class OrderService {
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
                 return user.getOrders().stream()
-                                .map(order -> {
-                                    return OrderHistoryResponse.builder()
-                                            .id((long) order.getId())
-                                            .productId(order.getProduct().getId())
-                                            .productName(order.getProduct().getName())
-                                            .orderDate(order.getOrder_date())
-                                            .productImageUrl(order.getProduct().getImageUrl())
-                                            .status(order.getStatus())
-                                            .quantity(order.getCount())
-                                            .totalPrice(order.getTotal_price())
-                                            .build();
-
-                                })
+                                .flatMap(order -> order.getItems().stream()
+                                                .map(item -> {
+                                                        return OrderHistoryResponse.builder()
+                                                                        .id((long) order.getId())
+                                                                        .productId(item.getProduct().getId())
+                                                                        .productName(item.getProduct().getName())
+                                                                        .orderDate(order.getOrder_date())
+                                                                        .productImageUrl(
+                                                                                        item.getProduct().getImageUrl())
+                                                                        .status(order.getStatus())
+                                                                        .quantity(item.getQuantity())
+                                                                        .totalPrice(item.getPrice()
+                                                                                        * item.getQuantity())
+                                                                        .build();
+                                                }))
                                 .collect(Collectors.toList());
         }
 }

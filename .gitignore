@@ -21,3 +21,4 @@ frontend/build/
 frontend/app/build/
 frontend/*.iml
 frontend/*.keystore
+docs/
