@@ -2,19 +2,50 @@ package com.example.mini_shop_frontend.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +58,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.mini_shop_frontend.Product
-import com.example.mini_shop_frontend.ui.theme.*
+import com.example.mini_shop_frontend.ui.theme.PrimaryBlue
+import com.example.mini_shop_frontend.ui.theme.TextDark
+import com.example.mini_shop_frontend.ui.theme.TextGrey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,9 +69,13 @@ fun ProductListScreen(
         products: List<Product>,
         onBackClick: () -> Unit = {},
         onCartClick: () -> Unit = {},
-        onProductClick: (Long) -> Unit = {}
+        onProductClick: (Long) -> Unit = {},
+        onSearch: (String) -> Unit,
+        onFilter: (Double) -> Unit
 ) {
         var selectedCategory by remember { mutableStateOf("All") }
+        var searchQuery by remember { mutableStateOf("") }
+        var showFilterDialog by remember { mutableStateOf(false) }
 
         Scaffold(
                 topBar = {
@@ -78,45 +115,69 @@ fun ProductListScreen(
                 containerColor = Color(0xFFF9FAFB),
                 contentWindowInsets = WindowInsets(0.dp)
         ) { paddingValues ->
-                LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(paddingValues),
-                        contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                        // Filter & Sort Bar
-                        item { FilterSortBar() }
+                Box(modifier = Modifier.padding(paddingValues)) {
+                        LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(bottom = 16.dp)
+                        ) {
+                                // Filter & Sort Bar
+                                item {
+                                        FilterSortBar(
+                                                searchQuery = searchQuery,
+                                                onSearchQueryChanged = {
+                                                        searchQuery = it
+                                                        onSearch(it)
+                                                },
+                                                onFilterClick = { showFilterDialog = true }
+                                        )
+                                }
 
-                        // Categories
-                        item {
-                                CategoryChips(
-                                        selectedCategory = selectedCategory,
-                                        onCategorySelected = { selectedCategory = it }
-                                )
+                                // Categories
+                                item {
+                                        CategoryChips(
+                                                selectedCategory = selectedCategory,
+                                                onCategorySelected = { selectedCategory = it }
+                                        )
+                                }
+
+                                // Product List
+                                items(products) { product ->
+                                        ProductListCard(
+                                                product = product,
+                                                onClick = { onProductClick(product.id) }
+                                        )
+                                }
+
+                                // Skeleton Loader (Example/Placeholder)
+                                item { SkeletonProductCard() }
                         }
 
-                        // Product List
-                        items(products) { product ->
-                                ProductListCard(
-                                        product = product,
-                                        onClick = { onProductClick(product.id) }
+                        if (showFilterDialog) {
+                                FilterDialog(
+                                        onDismiss = { showFilterDialog = false },
+                                        onApplyFilter = { price ->
+                                                showFilterDialog = false
+                                                onFilter(price)
+                                        }
                                 )
                         }
-
-                        // Skeleton Loader (Example/Placeholder)
-                        item { SkeletonProductCard() }
                 }
         }
 }
 
 @Composable
-fun FilterSortBar() {
+fun FilterSortBar(
+        searchQuery: String,
+        onSearchQueryChanged: (String) -> Unit,
+        onFilterClick: () -> Unit
+) {
         Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
         ) {
-                // Filter Button
                 Surface(
-                        modifier = Modifier.height(36.dp),
+                        modifier = Modifier.height(36.dp).clickable { onFilterClick() },
                         shape = RoundedCornerShape(12.dp),
                         border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
                         color = Color.White
@@ -132,49 +193,70 @@ fun FilterSortBar() {
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Filter", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                // Badge
-                                Box(
-                                        modifier =
-                                                Modifier.size(18.dp)
-                                                        .clip(CircleShape)
-                                                        .background(PrimaryBlue),
-                                        contentAlignment = Alignment.Center
-                                ) {
-                                        Text(
-                                                "2",
-                                                color = Color.White,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold
-                                        )
-                                }
                         }
                 }
 
-                // Sort Dropdown Placeholder
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(horizontalAlignment = Alignment.End) {
-                                Text("Sort:", fontSize = 12.sp, color = TextGrey)
-                                Text(
-                                        "Recommended",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextDark
+                Spacer(modifier = Modifier.width(8.dp))
+                OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = onSearchQueryChanged,
+                        modifier =
+                                Modifier.weight(1f) // Take up available space
+                                        .padding(end = 8.dp),
+                        placeholder = { Text("Search products...") },
+                        singleLine = true,
+                        trailingIcon = {
+                                Icon(Icons.Default.Search, contentDescription = "Search")
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors =
+                                OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                                        focusedBorderColor = PrimaryBlue
+                                )
+                )
+        }
+}
+
+@Composable
+fun FilterDialog(onDismiss: () -> Unit, onApplyFilter: (Double) -> Unit) {
+        var priceLimit by remember {
+                mutableStateOf(100f)
+        } // Default slider value (float for Slider)
+
+        androidx.compose.material3.AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(text = "Filter by Price", fontWeight = FontWeight.Bold) },
+                text = {
+                        Column {
+                                Text(text = "Max Price: $${priceLimit.toInt()}")
+                                androidx.compose.material3.Slider(
+                                        value = priceLimit,
+                                        onValueChange = { priceLimit = it },
+                                        valueRange =
+                                                0f..1000f, // Adjust range based on your product
+                                        // data
+                                        steps = 19 // Optional: steps for the slider
                                 )
                         }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                                Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
-                                tint = TextGrey
-                        )
-                }
-
-                // List/Grid Toggle
-                IconButton(onClick = {}) {
-                        Icon(Icons.Default.List, contentDescription = "Toggle View")
-                }
-        }
+                },
+                confirmButton = {
+                        Button(
+                                onClick = {
+                                        onApplyFilter(priceLimit.toDouble())
+                                        onDismiss()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                        ) { Text("Apply") }
+                },
+                dismissButton = {
+                        androidx.compose.material3.TextButton(onClick = onDismiss) {
+                                Text("Cancel", color = TextGrey)
+                        }
+                },
+                containerColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
+        )
 }
 
 @Composable

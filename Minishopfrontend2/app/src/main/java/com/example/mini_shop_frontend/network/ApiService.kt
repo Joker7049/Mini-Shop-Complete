@@ -29,6 +29,22 @@ interface ApiService {
                 @Query("size") size: Int = 20
         ): Response<ProductResponse>
 
+        @GET("api/products/search")
+        suspend fun searchByKeyword(
+                @Header("Authorization") token: String,
+                @Query("keyword") keyword: String,
+                @Query("page") page: Int = 0,
+                @Query("size") size: Int = 10
+        ): Response<ProductResponse>
+
+        @GET("api/products/filter")
+        suspend fun getProductsByFilter(
+                @Header("Authorization") token: String,
+                @Query("maxPrice") maxPrice: Double? = null,
+                @Query("page") page: Int = 0,
+                @Query("size") size: Int = 20
+        ): Response<ProductResponse>
+
         @GET("api/products/category/{categoryName}")
         suspend fun getProductsByCategory(
                 @Header("Authorization") token: String,

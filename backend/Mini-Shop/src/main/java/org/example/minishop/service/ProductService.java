@@ -33,6 +33,20 @@ public class ProductService {
                 .map(this::mapToDto);
     }
 
+    public Page<ProductDto> findByKeyword(String keyword, int page, int size) {
+        log.debug("Fetching all products for the keyword {}", keyword);
+        Pageable pageable = PageRequest.of(page, size);
+
+        return productRepository.findByNameContainingIgnoreCase(pageable, keyword)
+                .map(this::mapToDto);
+    }
+
+    public Page<ProductDto> findByPriceLessThan(Double price, int page, int size) {
+        log.debug("Fetching all products for the price less than: {}", price);
+        Pageable pageable = PageRequest.of(page, size);
+        return productRepository.findByPriceLessThan(pageable, price).map(this::mapToDto);
+    }
+
     public Page<ProductDto> findProductsByCategory(String category, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Category categoryEnum = Category.fromDisplayName(category);

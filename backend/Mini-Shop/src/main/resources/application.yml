@@ -22,5 +22,9 @@ spring:
         options:
           model: llama3.1:latest
 
+logging:
+  level:
+    root: info
+    org.example.minishop: debug
 
 jwt.secret: jieaanzjfuah274hgbafukarbuhadfjv

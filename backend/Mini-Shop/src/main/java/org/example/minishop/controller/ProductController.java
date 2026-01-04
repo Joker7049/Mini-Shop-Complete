@@ -37,6 +37,26 @@ public class ProductController {
         return ResponseEntity.ok(productService.findProductsByCategory(categoryName, page, size));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProductDto>> findBySearch(@RequestParam(defaultValue = "") String keyword,
+                                                         @RequestParam(defaultValue = "0") Integer page,
+                                                         @RequestParam(defaultValue = "10") Integer size){
+        if (keyword.equals("")){
+            return ResponseEntity.ok(productService.findAllDtos(page, size));
+        }
+        return ResponseEntity.ok(productService.findByKeyword(keyword, page, size));
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ProductDto>> findByFilter(@RequestParam(required = false) Double maxPrice,
+                                                         @RequestParam(defaultValue = "0") Integer page,
+                                                         @RequestParam(defaultValue = "10") Integer size){
+        if(maxPrice == null){
+            return ResponseEntity.ok(productService.findAllDtos(page, size));
+        }
+        return ResponseEntity.ok(productService.findByPriceLessThan(maxPrice, page, size));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> save(@Valid @RequestBody ProductDto product) {

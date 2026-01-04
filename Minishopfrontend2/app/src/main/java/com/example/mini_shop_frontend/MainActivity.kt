@@ -103,22 +103,22 @@ val TextDark = Color(0xFF111418)
 val TextGrey = Color(0xFF617589)
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        TokenManager.initialize(applicationContext)
-        setContent { ShopperTheme { ShopperApp() } }
-    }
+        override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+                TokenManager.initialize(applicationContext)
+                setContent { ShopperTheme { ShopperApp() } }
+        }
 }
 
 fun getIconForCategory(categoryName: String): ImageVector {
-    return when (categoryName.uppercase()) {
-        "FASHION" -> Icons.Outlined.Checkroom
-        "ELECTRONICS" -> Icons.Outlined.Devices
-        "HOME & KITCHEN" -> Icons.Outlined.Chair
-        "SPORTS" -> Icons.Outlined.FitnessCenter
-        "BEAUTY" -> Icons.Outlined.Diamond
-        else -> Icons.Default.GridView // Fallback icon
-    }
+        return when (categoryName.uppercase()) {
+                "FASHION" -> Icons.Outlined.Checkroom
+                "ELECTRONICS" -> Icons.Outlined.Devices
+                "HOME & KITCHEN" -> Icons.Outlined.Chair
+                "SPORTS" -> Icons.Outlined.FitnessCenter
+                "BEAUTY" -> Icons.Outlined.Diamond
+                else -> Icons.Default.GridView // Fallback icon
+        }
 }
 
 // --- Data Models ---
@@ -247,164 +247,182 @@ val trendingProducts =
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ShopperApp(viewModel: MainViewModel = viewModel(), cartViewModel: CartViewModel = viewModel()) {
-    val navController = rememberNavController()
-    val products by viewModel.products.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val selectedCategory by viewModel.selectedCategory.collectAsState()
-    val categories by viewModel.categories.collectAsState()
-    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    val snackMessage by cartViewModel.snackMessage.collectAsState()
+        val navController = rememberNavController()
+        val products by viewModel.products.collectAsState()
+        val isLoading by viewModel.isLoading.collectAsState()
+        val error by viewModel.error.collectAsState()
+        val selectedCategory by viewModel.selectedCategory.collectAsState()
+        val categories by viewModel.categories.collectAsState()
+        val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+        val snackMessage by cartViewModel.snackMessage.collectAsState()
 
-    LaunchedEffect(isLoggedIn) {
-        val isAuthScreen = currentRoute == "login" || currentRoute == "signup"
+        LaunchedEffect(isLoggedIn) {
+                val isAuthScreen = currentRoute == "login" || currentRoute == "signup"
 
-        if (isLoggedIn && isAuthScreen) {
-            navController.navigate("home") {
-                popUpTo(navController.graph.startDestinationId) { inclusive = true }
-            }
+                if (isLoggedIn && isAuthScreen) {
+                        navController.navigate("home") {
+                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        }
+                }
         }
-    }
 
-    val selectedTab =
-            when {
-                currentRoute == "home" -> 0
-                currentRoute == "product_list" -> 1
-                currentRoute?.contains("cart") == true -> 2
-                currentRoute == "profile" -> 3
-                else -> 0
-            }
+        val selectedTab =
+                when {
+                        currentRoute == "home" -> 0
+                        currentRoute == "product_list" -> 1
+                        currentRoute?.contains("cart") == true -> 2
+                        currentRoute == "profile" -> 3
+                        else -> 0
+                }
 
-    Scaffold(
-            bottomBar = {
-                if (currentRoute != "login" && currentRoute != "signup" && currentRoute != "splash"
-                ) {
-                    BottomNavigationBar(selectedTab) { index ->
-                        val destination =
-                                when (index) {
-                                    0 -> "home"
-                                    1 -> "product_list"
-                                    2 -> "cart"
-                                    3 -> "profile"
-                                    else -> "home"
+        Scaffold(
+                bottomBar = {
+                        if (currentRoute != "login" &&
+                                        currentRoute != "signup" &&
+                                        currentRoute != "splash"
+                        ) {
+                                BottomNavigationBar(selectedTab) { index ->
+                                        val destination =
+                                                when (index) {
+                                                        0 -> "home"
+                                                        1 -> "product_list"
+                                                        2 -> "cart"
+                                                        3 -> "profile"
+                                                        else -> "home"
+                                                }
+                                        if (currentRoute != destination) {
+                                                navController.navigate(destination) {
+                                                        popUpTo(
+                                                                navController
+                                                                        .graph
+                                                                        .startDestinationId
+                                                        ) { saveState = true }
+                                                        launchSingleTop = true
+                                                        restoreState = true
+                                                }
+                                        }
                                 }
-                        if (currentRoute != destination) {
-                            navController.navigate(destination) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
                         }
-                    }
-                }
-            },
-            containerColor = BackgroundLight
-    ) { paddingValues ->
-        LaunchedEffect(Unit) { cartViewModel.fetchCart() }
+                },
+                containerColor = BackgroundLight
+        ) { paddingValues ->
+                LaunchedEffect(Unit) { cartViewModel.fetchCart() }
 
-        NavHost(
-                navController = navController,
-                startDestination = "splash",
-                modifier = Modifier.padding(paddingValues)
-        ) {
-            composable("home") {
-                HomeScreen(
-                        products = products,
-                        categories = categories,
-                        isLoading = isLoading,
-                        error = error,
-                        onProductClick = { productId ->
-                            navController.navigate("product_detail/$productId")
-                        },
-                        onSeeAllClick = { navController.navigate("product_list") },
-                        onCategoryClick = { categoryName ->
-                            viewModel.selectCategory(categoryName)
-                            navController.navigate("product_list")
-                        },
-                        onCartClick = { navController.navigate("cart") },
-                        onProfileClick = { navController.navigate("profile") }
-                )
-            }
-            composable(
-                    route = "product_detail/{productId}",
-                    arguments = listOf(navArgument("productId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val productId = backStackEntry.arguments?.getLong("productId")
-                val product = products.find { it.id == productId }
-                if (product != null) {
-                    ProductDetailScreen(
-                            product = product,
-                            onBackClick = { navController.popBackStack() },
-                            onAddToCartClick = { cartViewModel.addToCart(product.id, 1) }
-                    )
-                }
-            }
-            composable("product_list") {
-                com.example.mini_shop_frontend.ui.ProductListScreen(
-                        title = selectedCategory ?: "All Products",
-                        products = products,
-                        onBackClick = { navController.popBackStack() },
-                        onProductClick = { productId ->
-                            navController.navigate("product_detail/$productId")
-                        }
-                )
-            }
-            composable("profile") {
-                com.example.mini_shop_frontend.ui.ProfileScreen(
-                        viewModel = viewModel,
-                        onBackClick = { navController.popBackStack() },
-                        onLogoutClick = {
-                            viewModel.logout()
-                            navController.navigate("login") { popUpTo(0) { inclusive = true } }
-                        },
-                        onMyOrdersClick = { navController.navigate("my_orders") }
-                )
-            }
-            composable("my_orders") {
-                val orders by viewModel.orders.collectAsState()
-                com.example.mini_shop_frontend.ui.OrderListScreen(
-                        orders = orders,
-                        onBackClick = { navController.popBackStack() }
-                )
-            }
-            composable("cart") {
-                com.example.mini_shop_frontend.ui.CartScreen(
-                        viewModel = cartViewModel,
-                        onBackClick = { navController.popBackStack() },
-                        onCheckoutClick = { /* Handle checkout */}
-                )
-            }
-            composable("login") {
-                com.example.mini_shop_frontend.ui.LoginScreen(
-                        onLoginClick = { username, password ->
-                            viewModel.login(username, password)
-                        },
-                        onSignUpClick = { navController.navigate("signup") },
-                        onForgotPasswordClick = { /* Handle forgot password */}
-                )
-            }
-            composable("signup") {
-                com.example.mini_shop_frontend.ui.SignUpScreen(
-                        onSignUpClick = { username, password, email ->
-                            viewModel.signUp(username, password, email)
-                        },
-                        onLoginClick = { navController.navigate("login") },
-                        onBackClick = { navController.popBackStack() }
-                )
-            }
-            composable("splash") {
-                com.example.mini_shop_frontend.ui.SplashScreen(
+                NavHost(
                         navController = navController,
-                        isLoggedIn = isLoggedIn
-                )
-            }
+                        startDestination = "splash",
+                        modifier = Modifier.padding(paddingValues)
+                ) {
+                        composable("home") {
+                                HomeScreen(
+                                        products = products,
+                                        categories = categories,
+                                        isLoading = isLoading,
+                                        error = error,
+                                        onProductClick = { productId ->
+                                                navController.navigate("product_detail/$productId")
+                                        },
+                                        onSeeAllClick = { navController.navigate("product_list") },
+                                        onCategoryClick = { categoryName ->
+                                                viewModel.selectCategory(categoryName)
+                                                navController.navigate("product_list")
+                                        },
+                                        onCartClick = { navController.navigate("cart") },
+                                        onProfileClick = { navController.navigate("profile") }
+                                )
+                        }
+                        composable(
+                                route = "product_detail/{productId}",
+                                arguments =
+                                        listOf(navArgument("productId") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                                val productId = backStackEntry.arguments?.getLong("productId")
+                                val product = products.find { it.id == productId }
+                                if (product != null) {
+                                        ProductDetailScreen(
+                                                product = product,
+                                                onBackClick = { navController.popBackStack() },
+                                                onAddToCartClick = {
+                                                        cartViewModel.addToCart(product.id, 1)
+                                                }
+                                        )
+                                }
+                        }
+                        composable("product_list") {
+                                com.example.mini_shop_frontend.ui.ProductListScreen(
+                                        title = selectedCategory ?: "All Products",
+                                        products = products,
+                                        onBackClick = { navController.popBackStack() },
+                                        onProductClick = { productId ->
+                                                navController.navigate("product_detail/$productId")
+                                        },
+                                        onSearch = { query -> viewModel.searchProducts(query) },
+                                        onFilter = { maxPrice ->
+                                                viewModel.filterProducts(maxPrice)
+                                        }
+                                )
+                        }
+                        composable("profile") {
+                                com.example.mini_shop_frontend.ui.ProfileScreen(
+                                        viewModel = viewModel,
+                                        onBackClick = { navController.popBackStack() },
+                                        onLogoutClick = {
+                                                viewModel.logout()
+                                                navController.navigate("login") {
+                                                        popUpTo(0) { inclusive = true }
+                                                }
+                                        },
+                                        onMyOrdersClick = { navController.navigate("my_orders") }
+                                )
+                        }
+                        composable("my_orders") {
+                                val orders by viewModel.orders.collectAsState()
+                                com.example.mini_shop_frontend.ui.OrderListScreen(
+                                        orders = orders,
+                                        onBackClick = { navController.popBackStack() }
+                                )
+                        }
+                        composable("cart") {
+                                com.example.mini_shop_frontend.ui.CartScreen(
+                                        viewModel = cartViewModel,
+                                        onBackClick = { navController.popBackStack() },
+                                        onCheckoutClick = { /* Handle checkout */}
+                                )
+                        }
+                        composable("login") {
+                                com.example.mini_shop_frontend.ui.LoginScreen(
+                                        onLoginClick = { username, password ->
+                                                viewModel.login(username, password)
+                                        },
+                                        onSignUpClick = { navController.navigate("signup") },
+                                        onForgotPasswordClick = { /* Handle forgot password */}
+                                )
+                        }
+                        composable("signup") {
+                                com.example.mini_shop_frontend.ui.SignUpScreen(
+                                        onSignUpClick = { username, password, email ->
+                                                viewModel.signUp(username, password, email)
+                                        },
+                                        onLoginClick = { navController.navigate("login") },
+                                        onBackClick = { navController.popBackStack() }
+                                )
+                        }
+                        composable("splash") {
+                                com.example.mini_shop_frontend.ui.SplashScreen(
+                                        navController = navController,
+                                        isLoggedIn = isLoggedIn
+                                )
+                        }
+                }
+                snackMessage?.let { message ->
+                        CustomToast(
+                                message = message,
+                                onDismiss = { cartViewModel.showSnack(null) }
+                        )
+                }
         }
-        snackMessage?.let { message ->
-            CustomToast(message = message, onDismiss = { cartViewModel.showSnack(null) })
-        }
-    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -420,75 +438,81 @@ fun HomeScreen(
         onCartClick: () -> Unit,
         onProfileClick: () -> Unit
 ) {
-    // Main Content List
-    LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Sticky Header
-        stickyHeader { TopAppBar(onCartClick = onCartClick, onProfileClick = onProfileClick) }
-
-        // Search Bar
-        item { SearchBar(modifier = Modifier.padding(horizontal = 16.dp)) }
-
-        // Hero Carousel
-        item { HeroCarousel() }
-
-        // Categories
-        item { CategorySection(categories = categories, onCategoryClick) }
-
-        // New Arrivals
-        item {
-            if (isLoading) {
-                Box(
-                        modifier = Modifier.fillMaxWidth().height(200.dp),
-                        contentAlignment = Alignment.Center
-                ) { CircularProgressIndicator() }
-            } else if (error != null) {
-                Text("Error: $error", color = Color.Red, modifier = Modifier.padding(16.dp))
-            } else {
-                NewArrivalsSection(
-                        products = products,
-                        onProductClick = onProductClick,
-                        onSeeAllClick = onSeeAllClick
-                )
-            }
-        }
-
-        // Trending Grid
-        item {
-            Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                        text = "Trending Now",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDark
-                )
-            }
-        }
-
-        items(trendingProducts.chunked(2)) { rowItems ->
-            Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                rowItems.forEach { product ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        TrendingProductCard(product, onProductClick)
-                    }
+        // Main Content List
+        LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+                // Sticky Header
+                stickyHeader {
+                        TopAppBar(onCartClick = onCartClick, onProfileClick = onProfileClick)
                 }
-                if (rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
 
-        item { Spacer(modifier = Modifier.height(16.dp)) }
-    }
+                // Search Bar
+                item { SearchBar(modifier = Modifier.padding(horizontal = 16.dp)) }
+
+                // Hero Carousel
+                item { HeroCarousel() }
+
+                // Categories
+                item { CategorySection(categories = categories, onCategoryClick) }
+
+                // New Arrivals
+                item {
+                        if (isLoading) {
+                                Box(
+                                        modifier = Modifier.fillMaxWidth().height(200.dp),
+                                        contentAlignment = Alignment.Center
+                                ) { CircularProgressIndicator() }
+                        } else if (error != null) {
+                                Text(
+                                        "Error: $error",
+                                        color = Color.Red,
+                                        modifier = Modifier.padding(16.dp)
+                                )
+                        } else {
+                                NewArrivalsSection(
+                                        products = products,
+                                        onProductClick = onProductClick,
+                                        onSeeAllClick = onSeeAllClick
+                                )
+                        }
+                }
+
+                // Trending Grid
+                item {
+                        Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                        ) {
+                                Text(
+                                        text = "Trending Now",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextDark
+                                )
+                        }
+                }
+
+                items(trendingProducts.chunked(2)) { rowItems ->
+                        Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                                rowItems.forEach { product ->
+                                        Box(modifier = Modifier.weight(1f)) {
+                                                TrendingProductCard(product, onProductClick)
+                                        }
+                                }
+                                if (rowItems.size == 1) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                }
+                        }
+                }
+
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+        }
 }
 
 // --- Components ---
@@ -496,228 +520,265 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBar(onCartClick: () -> Unit, onProfileClick: () -> Unit) {
-    Surface(color = Color.White, shadowElevation = 2.dp, modifier = Modifier.fillMaxWidth()) {
-        Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Menu Button
-            IconButton(
-                    onClick = {},
-                    modifier = Modifier.size(40.dp).background(Color.Transparent, CircleShape)
-            ) { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextDark) }
+        Surface(color = Color.White, shadowElevation = 2.dp, modifier = Modifier.fillMaxWidth()) {
+                Row(
+                        modifier =
+                                Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                                        .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                        // Menu Button
+                        IconButton(
+                                onClick = {},
+                                modifier =
+                                        Modifier.size(40.dp)
+                                                .background(Color.Transparent, CircleShape)
+                        ) { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextDark) }
 
-            // Title
-            Text(
-                    text = "SHOPPER",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = TextDark,
-                    modifier = Modifier.weight(1f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-
-            // Actions
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box {
-                    IconButton(onClick = onCartClick, modifier = Modifier.size(40.dp)) {
-                        Icon(
-                                Icons.Outlined.ShoppingCart,
-                                contentDescription = "Cart",
-                                tint = TextDark
+                        // Title
+                        Text(
+                                text = "SHOPPER",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = TextDark,
+                                modifier = Modifier.weight(1f),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
-                    }
-                    // Red Dot
-                    Box(
-                            modifier =
-                                    Modifier.align(Alignment.TopEnd)
-                                            .padding(top = 4.dp, end = 4.dp)
-                                            .size(10.dp)
-                                            .background(PrimaryBlue, CircleShape)
-                                            .border(2.dp, Color.White, CircleShape)
-                    )
+
+                        // Actions
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box {
+                                        IconButton(
+                                                onClick = onCartClick,
+                                                modifier = Modifier.size(40.dp)
+                                        ) {
+                                                Icon(
+                                                        Icons.Outlined.ShoppingCart,
+                                                        contentDescription = "Cart",
+                                                        tint = TextDark
+                                                )
+                                        }
+                                        // Red Dot
+                                        Box(
+                                                modifier =
+                                                        Modifier.align(Alignment.TopEnd)
+                                                                .padding(top = 4.dp, end = 4.dp)
+                                                                .size(10.dp)
+                                                                .background(
+                                                                        PrimaryBlue,
+                                                                        CircleShape
+                                                                )
+                                                                .border(
+                                                                        2.dp,
+                                                                        Color.White,
+                                                                        CircleShape
+                                                                )
+                                        )
+                                }
+                                IconButton(
+                                        onClick = onProfileClick,
+                                        modifier = Modifier.size(40.dp)
+                                ) {
+                                        Icon(
+                                                Icons.Outlined.AccountCircle,
+                                                contentDescription = "Profile",
+                                                tint = TextDark
+                                        )
+                                }
+                        }
                 }
-                IconButton(onClick = onProfileClick, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                            Icons.Outlined.AccountCircle,
-                            contentDescription = "Profile",
-                            tint = TextDark
-                    )
-                }
-            }
         }
-    }
 }
 
 @Composable
 fun SearchBar(modifier: Modifier = Modifier) {
-    Surface(
-            modifier = modifier.fillMaxWidth().height(48.dp),
-            shape = RoundedCornerShape(8.dp),
-            color = Color(0xFFF0F2F4)
-    ) {
-        Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 12.dp)
+        Surface(
+                modifier = modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFFF0F2F4)
         ) {
-            Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = Color.Gray)
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                    text = "Find your favorite items...",
-                    color = TextGrey,
-                    style = MaterialTheme.typography.bodyMedium
-            )
+                Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                ) {
+                        Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                                text = "Find your favorite items...",
+                                color = TextGrey,
+                                style = MaterialTheme.typography.bodyMedium
+                        )
+                }
         }
-    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HeroCarousel() {
-    // Using simple Row with horizontal scroll for specific "snap" feel requested by design
-    // However, HorizontalPager is more idiomatic for carousels.
-    // Let's use LazyRow with snap behavior to match the HTML `snap-x` exactly.
+        // Using simple Row with horizontal scroll for specific "snap" feel requested by design
+        // However, HorizontalPager is more idiomatic for carousels.
+        // Let's use LazyRow with snap behavior to match the HTML `snap-x` exactly.
 
-    LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) { items(heroBanners) { banner -> HeroCard(banner) } }
+        LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) { items(heroBanners) { banner -> HeroCard(banner) } }
 }
 
 @Composable
 fun HeroCard(banner: HeroBanner) {
-    Card(
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            modifier =
-                    Modifier.width(340.dp) // Approximate from HTML 85vw/max400px
-                            .height(400.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                    model = banner.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-            )
+        Card(
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                modifier =
+                        Modifier.width(340.dp) // Approximate from HTML 85vw/max400px
+                                .height(400.dp)
+        ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                        AsyncImage(
+                                model = banner.imageUrl,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                        )
 
-            // Gradient Overlay
-            Box(
-                    modifier =
-                            Modifier.fillMaxSize()
-                                    .background(
-                                            Brush.verticalGradient(
-                                                    colors =
-                                                            listOf(
-                                                                    Color.Transparent,
-                                                                    Color.Black.copy(alpha = 0.7f)
-                                                            ),
-                                                    startY = 100f
-                                            )
-                                    )
-            )
+                        // Gradient Overlay
+                        Box(
+                                modifier =
+                                        Modifier.fillMaxSize()
+                                                .background(
+                                                        Brush.verticalGradient(
+                                                                colors =
+                                                                        listOf(
+                                                                                Color.Transparent,
+                                                                                Color.Black.copy(
+                                                                                        alpha = 0.7f
+                                                                                )
+                                                                        ),
+                                                                startY = 100f
+                                                        )
+                                                )
+                        )
 
-            // Content
-            Column(modifier = Modifier.align(Alignment.BottomStart).padding(24.dp)) {
-                // Tag
-                Surface(
-                        color =
-                                if (banner.tag == "NEW SEASON") PrimaryBlue
-                                else Color.White.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.padding(bottom = 12.dp)
-                ) {
-                    Text(
-                            text = banner.tag,
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+                        // Content
+                        Column(modifier = Modifier.align(Alignment.BottomStart).padding(24.dp)) {
+                                // Tag
+                                Surface(
+                                        color =
+                                                if (banner.tag == "NEW SEASON") PrimaryBlue
+                                                else Color.White.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(4.dp),
+                                        modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                        Text(
+                                                text = banner.tag,
+                                                color = Color.White,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier =
+                                                        Modifier.padding(
+                                                                horizontal = 8.dp,
+                                                                vertical = 4.dp
+                                                        )
+                                        )
+                                }
+
+                                Text(
+                                        text = banner.title,
+                                        color = Color.White,
+                                        fontSize = 32.sp,
+                                        lineHeight = 36.sp,
+                                        fontWeight = FontWeight.Bold
+                                )
+
+                                Text(
+                                        text = banner.subtitle,
+                                        color = Color(0xFFE5E7EB),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                )
+
+                                Button(
+                                        onClick = {},
+                                        colors =
+                                                ButtonDefaults.buttonColors(
+                                                        containerColor =
+                                                                if (banner.buttonText == "Shop Now")
+                                                                        Color.White
+                                                                else PrimaryBlue,
+                                                        contentColor =
+                                                                if (banner.buttonText == "Shop Now")
+                                                                        TextDark
+                                                                else Color.White
+                                                ),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.padding(top = 8.dp)
+                                ) { Text(text = banner.buttonText, fontWeight = FontWeight.Bold) }
+                        }
                 }
-
-                Text(
-                        text = banner.title,
-                        color = Color.White,
-                        fontSize = 32.sp,
-                        lineHeight = 36.sp,
-                        fontWeight = FontWeight.Bold
-                )
-
-                Text(
-                        text = banner.subtitle,
-                        color = Color(0xFFE5E7EB),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                )
-
-                Button(
-                        onClick = {},
-                        colors =
-                                ButtonDefaults.buttonColors(
-                                        containerColor =
-                                                if (banner.buttonText == "Shop Now") Color.White
-                                                else PrimaryBlue,
-                                        contentColor =
-                                                if (banner.buttonText == "Shop Now") TextDark
-                                                else Color.White
-                                ),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.padding(top = 8.dp)
-                ) { Text(text = banner.buttonText, fontWeight = FontWeight.Bold) }
-            }
         }
-    }
 }
 
 @Composable
 fun CategorySection(categories: List<String>, onCategoryClick: (String) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().background(Color.White).padding(vertical = 16.dp)) {
-        Text(
-                text = "Categories",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = TextDark,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Column(
+                modifier = Modifier.fillMaxWidth().background(Color.White).padding(vertical = 16.dp)
         ) {
-            items(categories) { category ->
-                Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.width(72.dp)
+                Text(
+                        text = "Categories",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
+                LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Surface(
-                            shape = CircleShape,
-                            color = Color(0xFFF0F2F4),
-                            modifier = Modifier.size(64.dp).clickable { onCategoryClick(category) }
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                    imageVector = getIconForCategory(category),
-                                    contentDescription = null,
-                                    tint = TextDark
-                            )
+                        items(categories) { category ->
+                                Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.width(72.dp)
+                                ) {
+                                        Surface(
+                                                shape = CircleShape,
+                                                color = Color(0xFFF0F2F4),
+                                                modifier =
+                                                        Modifier.size(64.dp).clickable {
+                                                                onCategoryClick(category)
+                                                        }
+                                        ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                        Icon(
+                                                                imageVector =
+                                                                        getIconForCategory(
+                                                                                category
+                                                                        ),
+                                                                contentDescription = null,
+                                                                tint = TextDark
+                                                        )
+                                                }
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                                text = category,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = TextDark,
+                                                textAlign = TextAlign.Center
+                                        )
+                                }
                         }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                            text = category,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextDark,
-                            textAlign = TextAlign.Center
-                    )
                 }
-            }
         }
-    }
 }
 
 @Composable
@@ -726,327 +787,372 @@ fun NewArrivalsSection(
         onProductClick: (Long) -> Unit,
         onSeeAllClick: () -> Unit = {}
 ) {
-    Column(modifier = Modifier.fillMaxWidth().background(Color.White).padding(bottom = 16.dp)) {
-        Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                    text = "New Arrivals",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDark
-            )
-            Text(
-                    text = "See all",
-                    color = PrimaryBlue,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onSeeAllClick() }
-            )
-        }
+        Column(modifier = Modifier.fillMaxWidth().background(Color.White).padding(bottom = 16.dp)) {
+                Row(
+                        modifier =
+                                Modifier.fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                ) {
+                        Text(
+                                text = "New Arrivals",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDark
+                        )
+                        Text(
+                                text = "See all",
+                                color = PrimaryBlue,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable { onSeeAllClick() }
+                        )
+                }
 
-        LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) { items(products) { product -> NewArrivalCard(product, onProductClick) } }
-    }
+                LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) { items(products) { product -> NewArrivalCard(product, onProductClick) } }
+        }
 }
 
 @Composable
 fun NewArrivalCard(product: Product, onProductClick: (Long) -> Unit) {
-    Column(modifier = Modifier.width(144.dp).clickable { onProductClick(product.id) }) {
-        Box(
-                modifier =
-                        Modifier.aspectRatio(0.75f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFF0F2F4))
-        ) {
-            AsyncImage(
-                    model = product.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-            )
-            Surface(
-                    shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.8f),
-                    modifier =
-                            Modifier.align(Alignment.TopEnd).padding(8.dp).size(32.dp).clickable {}
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                            imageVector = Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Like",
-                            modifier = Modifier.size(18.dp),
-                            tint = TextDark
-                    )
+        Column(modifier = Modifier.width(144.dp).clickable { onProductClick(product.id) }) {
+                Box(
+                        modifier =
+                                Modifier.aspectRatio(0.75f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFFF0F2F4))
+                ) {
+                        AsyncImage(
+                                model = product.imageUrl,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                        )
+                        Surface(
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.8f),
+                                modifier =
+                                        Modifier.align(Alignment.TopEnd)
+                                                .padding(8.dp)
+                                                .size(32.dp)
+                                                .clickable {}
+                        ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                                imageVector = Icons.Outlined.FavoriteBorder,
+                                                contentDescription = "Like",
+                                                modifier = Modifier.size(18.dp),
+                                                tint = TextDark
+                                        )
+                                }
+                        }
                 }
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-                text = product.name,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = TextDark,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = Color(0xFFFFC107), // Amber 500
-                    modifier = Modifier.size(14.dp)
-            )
-            Text(
-                    text = "${product.rating}",
-                    fontSize = 12.sp,
-                    color = TextGrey,
-                    modifier = Modifier.padding(start = 4.dp)
-            )
-        }
-        Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                    text = "$${product.price}0",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    color = PrimaryBlue
-            )
-            Surface(
-                    color = if (product.quantity > 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
-                    shape = RoundedCornerShape(4.dp)
-            ) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                        text =
-                                if (product.quantity > 0) "${product.quantity} left"
-                                else "Out of stock",
-                        color = if (product.quantity > 0) Color(0xFF2E7D32) else Color(0xFFC62828),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        text = product.name,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = TextDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                 )
-            }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFFFC107), // Amber 500
+                                modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                                text = "${product.rating}",
+                                fontSize = 12.sp,
+                                color = TextGrey,
+                                modifier = Modifier.padding(start = 4.dp)
+                        )
+                }
+                Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                ) {
+                        Text(
+                                text = "$${product.price}0",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = PrimaryBlue
+                        )
+                        Surface(
+                                color =
+                                        if (product.quantity > 0) Color(0xFFE8F5E9)
+                                        else Color(0xFFFFEBEE),
+                                shape = RoundedCornerShape(4.dp)
+                        ) {
+                                Text(
+                                        text =
+                                                if (product.quantity > 0) "${product.quantity} left"
+                                                else "Out of stock",
+                                        color =
+                                                if (product.quantity > 0) Color(0xFF2E7D32)
+                                                else Color(0xFFC62828),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier =
+                                                Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                )
+                        }
+                }
         }
-    }
 }
 
 @Composable
 fun TrendingProductCard(product: Product, onProductClick: (Long) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().clickable { onProductClick(product.id) }) {
-        Box(
-                modifier =
-                        Modifier.aspectRatio(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFF0F2F4))
-        ) {
-            AsyncImage(
-                    model = product.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-            )
-
-            if (product.isBestSeller) {
-                Surface(
-                        color = Color.White,
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
+        Column(modifier = Modifier.fillMaxWidth().clickable { onProductClick(product.id) }) {
+                Box(
+                        modifier =
+                                Modifier.aspectRatio(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFFF0F2F4))
                 ) {
-                    Text(
-                            text = "BEST SELLER",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                    )
-                }
-            }
+                        AsyncImage(
+                                model = product.imageUrl,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                        )
 
-            if (product.discountTag != null) {
-                Surface(
-                        color = Color(0xFFEF4444), // Red 500
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
-                ) {
-                    Text(
-                            text = product.discountTag,
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                    )
-                }
-            }
-        }
+                        if (product.isBestSeller) {
+                                Surface(
+                                        color = Color.White,
+                                        shape = RoundedCornerShape(4.dp),
+                                        modifier =
+                                                Modifier.align(Alignment.BottomStart).padding(8.dp)
+                                ) {
+                                        Text(
+                                                text = "BEST SELLER",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier =
+                                                        Modifier.padding(
+                                                                horizontal = 4.dp,
+                                                                vertical = 2.dp
+                                                        )
+                                        )
+                                }
+                        }
 
-        Column(modifier = Modifier.padding(top = 12.dp)) {
-            Text(
-                    text = product.name,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = TextDark,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-            )
-            Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = product.category ?: "Item", fontSize = 12.sp, color = TextGrey)
-                Surface(
-                        color = if (product.quantity > 0) Color(0xFFE3F2FD) else Color(0xFFFFEBEE),
-                        shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                            text =
-                                    if (product.quantity > 0) "Stock: ${product.quantity}"
-                                    else "Sold Out",
-                            color = if (product.quantity > 0) PrimaryBlue else Color(0xFFC62828),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
+                        if (product.discountTag != null) {
+                                Surface(
+                                        color = Color(0xFFEF4444), // Red 500
+                                        shape = RoundedCornerShape(4.dp),
+                                        modifier =
+                                                Modifier.align(Alignment.BottomStart).padding(8.dp)
+                                ) {
+                                        Text(
+                                                text = product.discountTag,
+                                                color = Color.White,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier =
+                                                        Modifier.padding(
+                                                                horizontal = 4.dp,
+                                                                vertical = 2.dp
+                                                        )
+                                        )
+                                }
+                        }
                 }
-            }
 
-            Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                            text = "$${product.price}0",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = TextDark
-                    )
-                    if (product.oldPrice != null) {
-                        Spacer(modifier = Modifier.width(6.dp))
+                Column(modifier = Modifier.padding(top = 12.dp)) {
                         Text(
-                                text = "$${product.oldPrice.toInt()}",
-                                fontSize = 12.sp,
-                                color = Color.Gray,
-                                textDecoration = TextDecoration.LineThrough
+                                text = product.name,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = TextDark,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                         )
-                    }
-                }
+                        Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                        ) {
+                                Text(
+                                        text = product.category ?: "Item",
+                                        fontSize = 12.sp,
+                                        color = TextGrey
+                                )
+                                Surface(
+                                        color =
+                                                if (product.quantity > 0) Color(0xFFE3F2FD)
+                                                else Color(0xFFFFEBEE),
+                                        shape = RoundedCornerShape(4.dp)
+                                ) {
+                                        Text(
+                                                text =
+                                                        if (product.quantity > 0)
+                                                                "Stock: ${product.quantity}"
+                                                        else "Sold Out",
+                                                color =
+                                                        if (product.quantity > 0) PrimaryBlue
+                                                        else Color(0xFFC62828),
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier =
+                                                        Modifier.padding(
+                                                                horizontal = 6.dp,
+                                                                vertical = 2.dp
+                                                        )
+                                        )
+                                }
+                        }
 
-                Surface(
-                        shape = CircleShape,
-                        color = PrimaryBlue.copy(alpha = 0.1f),
-                        modifier = Modifier.size(32.dp).clickable {}
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Add",
-                                tint = PrimaryBlue,
-                                modifier = Modifier.size(20.dp)
-                        )
-                    }
+                        Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                        ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                                text = "$${product.price}0",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 16.sp,
+                                                color = TextDark
+                                        )
+                                        if (product.oldPrice != null) {
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                        text = "$${product.oldPrice.toInt()}",
+                                                        fontSize = 12.sp,
+                                                        color = Color.Gray,
+                                                        textDecoration = TextDecoration.LineThrough
+                                                )
+                                        }
+                                }
+
+                                Surface(
+                                        shape = CircleShape,
+                                        color = PrimaryBlue.copy(alpha = 0.1f),
+                                        modifier = Modifier.size(32.dp).clickable {}
+                                ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                        imageVector = Icons.Default.Add,
+                                                        contentDescription = "Add",
+                                                        tint = PrimaryBlue,
+                                                        modifier = Modifier.size(20.dp)
+                                                )
+                                        }
+                                }
+                        }
                 }
-            }
         }
-    }
 }
 
 @Composable
 fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    NavigationBar(
-            containerColor = Color.White,
-            tonalElevation = 8.dp,
-            windowInsets = WindowInsets(0.dp)
-    ) {
-        val items =
-                listOf(
-                        Triple("Home", Icons.Default.Home, Icons.Outlined.Home),
-                        Triple("Catalog", Icons.Default.GridView, Icons.Outlined.GridView),
-                        Triple("Cart", Icons.Outlined.ShoppingCart, Icons.Outlined.ShoppingCart),
-                        Triple("Account", Icons.Default.Person, Icons.Outlined.Person)
-                )
-
-        items.forEachIndexed { index, item ->
-            val isSelected = selectedTab == index
-            NavigationBarItem(
-                    selected = isSelected,
-                    onClick = { onTabSelected(index) },
-                    icon = {
-                        Icon(
-                                imageVector = if (isSelected) item.second else item.third,
-                                contentDescription = item.first
+        NavigationBar(
+                containerColor = Color.White,
+                tonalElevation = 8.dp,
+                windowInsets = WindowInsets(0.dp)
+        ) {
+                val items =
+                        listOf(
+                                Triple("Home", Icons.Default.Home, Icons.Outlined.Home),
+                                Triple("Catalog", Icons.Default.GridView, Icons.Outlined.GridView),
+                                Triple(
+                                        "Cart",
+                                        Icons.Outlined.ShoppingCart,
+                                        Icons.Outlined.ShoppingCart
+                                ),
+                                Triple("Account", Icons.Default.Person, Icons.Outlined.Person)
                         )
-                    },
-                    label = {
-                        Text(text = item.first, fontSize = 10.sp, fontWeight = FontWeight.Medium)
-                    },
-                    colors =
-                            NavigationBarItemDefaults.colors(
-                                    selectedIconColor = PrimaryBlue,
-                                    selectedTextColor = PrimaryBlue,
-                                    unselectedIconColor = Color.Gray,
-                                    unselectedTextColor = Color.Gray,
-                                    indicatorColor = Color.Transparent
-                            )
-            )
+
+                items.forEachIndexed { index, item ->
+                        val isSelected = selectedTab == index
+                        NavigationBarItem(
+                                selected = isSelected,
+                                onClick = { onTabSelected(index) },
+                                icon = {
+                                        Icon(
+                                                imageVector =
+                                                        if (isSelected) item.second else item.third,
+                                                contentDescription = item.first
+                                        )
+                                },
+                                label = {
+                                        Text(
+                                                text = item.first,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Medium
+                                        )
+                                },
+                                colors =
+                                        NavigationBarItemDefaults.colors(
+                                                selectedIconColor = PrimaryBlue,
+                                                selectedTextColor = PrimaryBlue,
+                                                unselectedIconColor = Color.Gray,
+                                                unselectedTextColor = Color.Gray,
+                                                indicatorColor = Color.Transparent
+                                        )
+                        )
+                }
         }
-    }
 }
 
 @Composable
 fun CustomToast(message: String, onDismiss: () -> Unit) {
-    LaunchedEffect(Unit) {
-        delay(3000)
-        onDismiss()
-    }
-
-    Box(modifier = Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.TopCenter) {
-        Surface(
-                color = PrimaryBlue,
-                shape = RoundedCornerShape(50.dp),
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp
-        ) {
-            Row(
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.CheckCircle, "Success", tint = Color.White)
-                Spacer(Modifier.width(8.dp))
-                Text(message, color = Color.White, fontWeight = FontWeight.Bold)
-            }
+        LaunchedEffect(Unit) {
+                delay(3000)
+                onDismiss()
         }
-    }
+
+        Box(
+                modifier = Modifier.fillMaxSize().padding(40.dp),
+                contentAlignment = Alignment.TopCenter
+        ) {
+                Surface(
+                        color = PrimaryBlue,
+                        shape = RoundedCornerShape(50.dp),
+                        tonalElevation = 8.dp,
+                        shadowElevation = 8.dp
+                ) {
+                        Row(
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                        ) {
+                                Icon(Icons.Default.CheckCircle, "Success", tint = Color.White)
+                                Spacer(Modifier.width(8.dp))
+                                Text(message, color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                }
+        }
 }
 
 // --- Theme Wrapper (Minimal) ---
 @Composable
 fun ShopperTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-            colorScheme =
-                    lightColorScheme(
-                            primary = PrimaryBlue,
-                            background = BackgroundLight,
-                            surface = Color.White
-                    ),
-            typography =
-                    Typography(
-                            titleLarge =
-                                    androidx.compose.ui.text.TextStyle(
-                                            fontFamily =
-                                                    androidx.compose.ui.text.font.FontFamily
-                                                            .SansSerif,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 22.sp
-                                    )
-                    ),
-            content = content
-    )
+        MaterialTheme(
+                colorScheme =
+                        lightColorScheme(
+                                primary = PrimaryBlue,
+                                background = BackgroundLight,
+                                surface = Color.White
+                        ),
+                typography =
+                        Typography(
+                                titleLarge =
+                                        androidx.compose.ui.text.TextStyle(
+                                                fontFamily =
+                                                        androidx.compose.ui.text.font.FontFamily
+                                                                .SansSerif,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 22.sp
+                                        )
+                        ),
+                content = content
+        )
 }

@@ -7,6 +7,7 @@ import com.example.mini_shop_frontend.Product
 import com.example.mini_shop_frontend.model.LoginRequest
 import com.example.mini_shop_frontend.model.LoginResponse
 import com.example.mini_shop_frontend.model.OrderHistoryDto
+import com.example.mini_shop_frontend.model.ProductDto
 import com.example.mini_shop_frontend.model.SignUpRequest
 import com.example.mini_shop_frontend.model.UserProfileDto
 import com.example.mini_shop_frontend.network.RetrofitInstance
@@ -31,6 +32,13 @@ class MainViewModel : ViewModel() {
 
     private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products: StateFlow<List<Product>> = _products.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow<String>("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _maxPrice = MutableStateFlow<Double?>(null)
+    val maxPrice: StateFlow<Double?> = _maxPrice.asStateFlow()
+
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -76,7 +84,7 @@ class MainViewModel : ViewModel() {
             try {
                 _isLoading.value = true
                 val response =
-                        RetrofitInstance.api.register(SignUpRequest(username, password, email))
+                    RetrofitInstance.api.register(SignUpRequest(username, password, email))
                 if (response.isSuccessful) {
                     _isLoading.value = false
                     handleAuthSuccess(response.body()!!)
@@ -114,40 +122,78 @@ class MainViewModel : ViewModel() {
             try {
                 val token = UserContext.token ?: throw Exception("Not Logged In")
                 val response =
-                        if (_selectedCategory.value == null) {
-                            RetrofitInstance.api.getProducts(token)
-                        } else {
-                            RetrofitInstance.api.getProductsByCategory(
-                                    token,
-                                    _selectedCategory.value!!
-                            )
-                        }
+                    if (_selectedCategory.value == null) {
+                        RetrofitInstance.api.getProducts(token)
+                    } else {
+                        RetrofitInstance.api.getProductsByCategory(
+                            token,
+                            _selectedCategory.value!!
+                        )
+                    }
 
                 if (response.isSuccessful) {
                     val content = response.body()?.content ?: emptyList()
                     // Map Backend DTO to UI Model
                     val uiProducts =
-                            content.map { dto ->
-                                Product(
-                                        id = dto.id,
-                                        name = dto.name,
-                                        description = dto.description,
-                                        imageUrl = dto.imageUrl
-                                                        ?: "https://via.placeholder.com/150",
-                                        rating = dto.rating,
-                                        price = dto.price,
-                                        oldPrice = dto.oldPrice,
-                                        category = dto.category,
-                                        discountTag = dto.discountTag,
-                                        isBestSeller = dto.isBestSeller ?: false,
-                                        quantity = dto.quantity
-                                )
-                            }
+                        content.map { dto ->
+                            mapProductDtoToUiModel(dto)
+                        }
                     _products.value = uiProducts
                     _error.value = null
                 } else {
                     _error.value = "Failed to load products: ${response.code()}"
                 }
+            } catch (e: Exception) {
+                _error.value = "Failed to load products: ${e.message}"
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun searchProducts(query: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _searchQuery.value = query
+                val token = UserContext.token ?: throw Exception("Not Logged In")
+                val response = RetrofitInstance.api.searchByKeyword(token, query)
+                if (response.isSuccessful) {
+                    val content = response.body()?.content ?: emptyList()
+                    _products.value = content.map { dto ->
+                        mapProductDtoToUiModel(dto)
+                    }
+                    _error.value = null
+                } else {
+                    _error.value = "Failed to load products: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _error.value = "Failed to load products: ${e.message}"
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun filterProducts(maxPrice: Double) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _maxPrice.value = maxPrice
+                val token = UserContext.token ?: throw Exception("Not Logged In")
+                val response = RetrofitInstance.api.getProductsByFilter(token, maxPrice)
+                if (response.isSuccessful) {
+                    val content = response.body()?.content ?: emptyList()
+                    _products.value = content.map { dto ->
+                        mapProductDtoToUiModel(dto)
+                    }
+                    _error.value = null
+                } else {
+                    _error.value = "Failed to load products: ${response.code()}"
+                }
+
             } catch (e: Exception) {
                 _error.value = "Failed to load products: ${e.message}"
                 e.printStackTrace()
@@ -182,9 +228,9 @@ class MainViewModel : ViewModel() {
                         _userProfile.value = profile
 
                         UserContext.setUserData(
-                                token.removePrefix("Bearer "),
-                                profile.username,
-                                profile.role
+                            token.removePrefix("Bearer "),
+                            profile.username,
+                            profile.role
                         )
                     }
                 }
@@ -220,5 +266,22 @@ class MainViewModel : ViewModel() {
         fetchProducts()
         fetchUserProfile()
         fetchOrderHistory()
+    }
+
+    private fun mapProductDtoToUiModel(dto: ProductDto): Product {
+        return Product(
+            id = dto.id,
+            name = dto.name,
+            description = dto.description,
+            imageUrl = dto.imageUrl
+                ?: "https://via.placeholder.com/150",
+            rating = dto.rating,
+            price = dto.price,
+            oldPrice = dto.oldPrice,
+            category = dto.category,
+            discountTag = dto.discountTag,
+            isBestSeller = dto.isBestSeller ?: false,
+            quantity = dto.quantity
+        )
     }
 }
